@@ -1,14 +1,4 @@
-// Ensure API_BASE always has a protocol
-const getApiBase = () => {
-    const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
-    // If URL doesn't start with http:// or https://, add https://
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        return `https://${url}`;
-    }
-    return url;
-};
-
-const API_BASE = getApiBase();
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 interface LoginCredentials {
     email: string;
