@@ -14,11 +14,18 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
     const pathname = usePathname();
     const router = useRouter();
     const [adminName, setAdminName] = useState('');
+    const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
+        // Client-side guard: every authed admin page renders inside this layout
+        if (!localStorage.getItem('admin_token')) {
+            router.replace('/login');
+            return;
+        }
+        setIsAuthorized(true);
         const name = localStorage.getItem('admin_name');
         if (name) setAdminName(name);
-    }, []);
+    }, [router]);
 
     const handleLogout = () => {
         localStorage.removeItem('admin_token');
@@ -66,6 +73,14 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
             ),
         },
     ];
+
+    if (!isAuthorized) {
+        return (
+            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFEFF' }}>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2" style={{ borderColor: 'var(--accent)' }}></div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen">
