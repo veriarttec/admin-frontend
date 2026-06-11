@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { toast } from 'sonner';
+import api, { getApiErrorMessage } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface Donor {
@@ -77,13 +78,13 @@ export default function DonorsPage() {
 
     const handleCreateDonor = async () => {
         if (!newDonor.first_name || !newDonor.last_name) {
-            alert('First name and last name are required');
+            toast.error('First name and last name are required');
             return;
         }
 
         try {
             const result = await api.createDonor(newDonor);
-            alert(`Donor created successfully!${result.temp_password ? `\nTemporary password: ${result.temp_password}` : ''}`);
+            toast.success(`Donor created successfully!${result.temp_password ? ` Temporary password: ${result.temp_password}` : ''}`);
             setShowCreateModal(false);
             setNewDonor({
                 first_name: '',
@@ -95,7 +96,7 @@ export default function DonorsPage() {
             });
             fetchDonors();
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to create donor');
+            toast.error(getApiErrorMessage(err));
         }
     };
 

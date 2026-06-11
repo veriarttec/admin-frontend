@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import api from '@/lib/api';
+import { toast } from 'sonner';
+import api, { getApiErrorMessage } from '@/lib/api';
+import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface StateHistoryItem {
@@ -106,6 +108,7 @@ interface DonorDetail {
 }
 
 export default function DonorDetailPage() {
+    const confirm = useConfirm();
     const [donor, setDonor] = useState<DonorDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -152,7 +155,7 @@ export default function DonorDetailPage() {
             if (err instanceof Error && err.message.includes('401')) {
                 router.push('/login');
             } else {
-                setError(err instanceof Error ? err.message : 'Failed to load donor');
+                setError(getApiErrorMessage(err, 'Failed to load donor'));
             }
         } finally {
             setLoading(false);
@@ -188,114 +191,149 @@ export default function DonorDetailPage() {
             await api.updateDonorInfo(donorId, editData);
             setEditMode(false);
             await fetchDonor();
-            alert('Donor information updated successfully');
+            toast.success('Donor information updated successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update donor');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this donor? This action cannot be undone.')) {
-            return;
-        }
+        if (!(await confirm({
+            title: 'Delete donor?',
+            description: 'This action cannot be undone.',
+            destructive: true,
+            confirmLabel: 'Delete donor',
+        }))) return;
         try {
             await api.deleteDonor(donorId);
-            alert('Donor deleted successfully');
+            toast.success('Donor deleted successfully');
             router.push('/donors');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to delete donor');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleVerifyDocument = async (docUrl: string) => {
-        const notes = prompt('Enter verification notes (optional):');
+        const notes = await confirm({
+            title: 'Verify document',
+            input: { label: 'Verification notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             await api.verifyDocument('donor', donorId, docUrl, notes || undefined);
             await fetchDonor();
-            alert('Document verified successfully');
+            toast.success('Document verified successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to verify document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectDocument = async (docUrl: string) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject document',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.rejectDocument('donor', donorId, docUrl, reason);
             await fetchDonor();
-            alert('Document rejected');
+            toast.success('Document rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleApproveConsent = async () => {
-        const notes = prompt('Enter approval notes (optional):');
+        const notes = await confirm({
+            title: 'Approve consent',
+            input: { label: 'Approval notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             await api.approveConsent(donorId, notes || undefined);
             await fetchDonor();
-            alert('Consent approved successfully');
+            toast.success('Consent approved successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve consent');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectConsent = async () => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject consent',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.rejectConsent(donorId, reason);
             await fetchDonor();
-            alert('Consent rejected');
+            toast.success('Consent rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject consent');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleApproveTests = async () => {
-        const notes = prompt('Enter approval notes (optional):');
+        const notes = await confirm({
+            title: 'Approve test results',
+            input: { label: 'Approval notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             await api.approveTests(donorId, notes || undefined);
             await fetchDonor();
-            alert('Test results approved successfully');
+            toast.success('Test results approved successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve tests');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectTests = async () => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject test results',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.rejectTests(donorId, reason);
             await fetchDonor();
-            alert('Test results rejected');
+            toast.success('Test results rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject tests');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleApproveTestReport = async (reportId: string) => {
-        const notes = prompt('Enter approval notes (optional):');
+        const notes = await confirm({
+            title: 'Approve test report',
+            input: { label: 'Approval notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             await api.approveTestReport(donorId, reportId, notes || undefined);
             await fetchDonor();
-            alert('Test report approved successfully');
+            toast.success('Test report approved successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve test report');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectTestReport = async (reportId: string) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject test report',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.rejectTestReport(donorId, reportId, reason);
             await fetchDonor();
-            alert('Test report rejected');
+            toast.success('Test report rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject test report');
+            toast.error(getApiErrorMessage(err));
         }
     };
 

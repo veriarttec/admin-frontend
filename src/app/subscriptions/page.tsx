@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { toast } from 'sonner';
+import api, { getApiErrorMessage } from '@/lib/api';
+import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface SubscriptionSummary {
@@ -41,6 +43,7 @@ interface SubscriptionDetail {
 }
 
 export default function SubscriptionsPage() {
+    const confirm = useConfirm();
     const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
     const [subscriptions, setSubscriptions] = useState<SubscriptionDetail[]>([]);
     const [loading, setLoading] = useState(true);
@@ -97,13 +100,18 @@ export default function SubscriptionsPage() {
     };
 
     const handleCancelSubscription = async (bankId: string, bankName: string) => {
-        if (!confirm(`Are you sure you want to cancel the subscription for ${bankName}?`)) return;
+        if (!(await confirm({
+            title: 'Cancel subscription?',
+            description: `This will cancel the subscription for ${bankName}.`,
+            destructive: true,
+            confirmLabel: 'Cancel subscription',
+        }))) return;
         try {
             await api.cancelSubscription(bankId);
             await fetchData();
-            alert('Subscription cancelled successfully');
+            toast.success('Subscription cancelled successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to cancel subscription');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
@@ -123,20 +131,31 @@ export default function SubscriptionsPage() {
             });
             await fetchData();
             setEditingPlan(null);
-            alert('Plan updated successfully. All banks with this plan will see the updated pricing and details.');
+            toast.success('Plan updated successfully. All banks with this plan will see the updated pricing and details.');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update plan');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleCreatePlan = async () => {
-        const id = prompt('Enter plan ID (e.g., basic, professional, enterprise):');
-        if (!id) return;
-        const name = prompt('Enter plan display name:');
-        if (!name) return;
-        const price = prompt('Enter monthly price:');
-        if (!price) return;
-        
+        const id = await confirm({
+            title: 'Create new plan — step 1 of 3',
+            input: { label: 'Plan ID (e.g. basic, professional, enterprise)', required: true },
+        }) as string | null;
+        if (id === null) return;
+
+        const name = await confirm({
+            title: 'Create new plan — step 2 of 3',
+            input: { label: 'Plan display name', required: true },
+        }) as string | null;
+        if (name === null) return;
+
+        const price = await confirm({
+            title: 'Create new plan — step 3 of 3',
+            input: { label: 'Monthly price', required: true },
+        }) as string | null;
+        if (price === null) return;
+
         try {
             await api.createSubscriptionPlan({
                 id: id.toLowerCase().replace(/\s+/g, '_'),
@@ -147,20 +166,25 @@ export default function SubscriptionsPage() {
                 description: ''
             });
             await fetchData();
-            alert('Plan created successfully');
+            toast.success('Plan created successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to create plan');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleDeletePlan = async (planId: string, planName: string) => {
-        if (!confirm(`Are you sure you want to delete the "${planName}" plan? This cannot be undone.`)) return;
+        if (!(await confirm({
+            title: `Delete "${planName}" plan?`,
+            description: 'This cannot be undone.',
+            destructive: true,
+            confirmLabel: 'Delete plan',
+        }))) return;
         try {
             await api.deleteSubscriptionPlan(planId);
             await fetchData();
-            alert('Plan deleted successfully');
+            toast.success('Plan deleted successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to delete plan');
+            toast.error(getApiErrorMessage(err));
         }
     };
 

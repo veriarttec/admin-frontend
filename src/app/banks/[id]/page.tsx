@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import api from '@/lib/api';
+import { toast } from 'sonner';
+import api, { getApiErrorMessage } from '@/lib/api';
+import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface BankFullDetail {
@@ -32,6 +34,7 @@ interface BankFullDetail {
 }
 
 export default function BankDetailPage() {
+    const confirm = useConfirm();
     const [bank, setBank] = useState<BankFullDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -70,7 +73,7 @@ export default function BankDetailPage() {
             if (err instanceof Error && err.message.includes('401')) {
                 router.push('/login');
             } else {
-                setError(err instanceof Error ? err.message : 'Failed to load bank');
+                setError(getApiErrorMessage(err, 'Failed to load bank'));
             }
         } finally {
             setLoading(false);
@@ -83,51 +86,65 @@ export default function BankDetailPage() {
             await fetchBank();
             setIsEditing(false);
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update bank');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleVerify = async () => {
-        if (!confirm('Are you sure you want to verify this bank?')) return;
+        if (!(await confirm({
+            title: 'Verify this bank?',
+            confirmLabel: 'Verify bank',
+        }))) return;
         try {
             await api.verifyBank(bankId, 'admin', 'Verified via admin portal');
             await fetchBank();
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to verify bank');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleStateChange = async (newState: string) => {
-        const reason = prompt('Enter reason for state change:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Change bank state',
+            input: { label: 'Reason for state change', required: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.changeBankState(bankId, newState, reason);
             await fetchBank();
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to change state');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleVerifyDocument = async (docIndex: number) => {
-        const notes = prompt('Enter verification notes (optional):');
+        const notes = await confirm({
+            title: 'Verify document',
+            input: { label: 'Verification notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             await api.verifyBankDocument(bankId, docIndex, notes || undefined);
             await fetchBank();
-            alert('Document verified successfully');
+            toast.success('Document verified successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to verify document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectDocument = async (docIndex: number) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject document',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             await api.rejectBankDocument(bankId, docIndex, reason);
             await fetchBank();
-            alert('Document rejected');
+            toast.success('Document rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
@@ -457,7 +474,7 @@ function SubscriptionTab({ bank, onUpdate }: { bank: BankFullDetail; onUpdate: (
             await onUpdate();
             setIsEditing(false);
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to update subscription');
+            toast.error(getApiErrorMessage(err));
         }
     };
 

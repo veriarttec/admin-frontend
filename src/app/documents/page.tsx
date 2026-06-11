@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import { toast } from 'sonner';
+import api, { getApiErrorMessage } from '@/lib/api';
+import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 
 interface PendingDocument {
@@ -26,6 +28,7 @@ interface PendingDocument {
 }
 
 export default function DocumentsPage() {
+    const confirm = useConfirm();
     const [documents, setDocuments] = useState<PendingDocument[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'banks' | 'donors'>('donors');
@@ -63,7 +66,11 @@ export default function DocumentsPage() {
     });
 
     const handleVerifyDocument = async (doc: PendingDocument) => {
-        const notes = prompt('Enter verification notes (optional):');
+        const notes = await confirm({
+            title: 'Approve document',
+            input: { label: 'Verification notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             if (doc.type === 'certification' && doc.document_index !== undefined) {
                 await api.verifyBankDocument(doc.entity_id, doc.document_index, notes || undefined);
@@ -73,15 +80,19 @@ export default function DocumentsPage() {
                 await api.approveTestReport(doc.entity_id, doc.report_id, notes || undefined);
             }
             await fetchPendingDocuments();
-            alert('Document approved successfully');
+            toast.success('Document approved successfully');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectDocument = async (doc: PendingDocument) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject document',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             if (doc.type === 'certification' && doc.document_index !== undefined) {
                 await api.rejectBankDocument(doc.entity_id, doc.document_index, reason);
@@ -91,18 +102,21 @@ export default function DocumentsPage() {
                 await api.rejectTestReport(doc.entity_id, doc.report_id, reason);
             }
             await fetchPendingDocuments();
-            alert('Document rejected');
+            toast.success('Document rejected');
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject document');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleApproveAll = async (entityId: string, entityDocs: PendingDocument[]) => {
-        const notes = prompt('Enter approval notes (optional):');
+        const notes = await confirm({
+            title: 'Approve all documents',
+            input: { label: 'Approval notes (optional)', required: false },
+        }) as string | null;
+        if (notes === null) return;
         try {
             const firstDoc = entityDocs[0];
             if (firstDoc.type === 'test_report') {
-                // Approve all individual test reports
                 for (const doc of entityDocs) {
                     if (doc.report_id) {
                         await api.approveTestReport(entityId, doc.report_id, notes || undefined);
@@ -112,19 +126,22 @@ export default function DocumentsPage() {
                 await api.approveConsent(entityId, notes || undefined);
             }
             await fetchPendingDocuments();
-            alert(`All ${firstDoc.type}s approved successfully`);
+            toast.success(`All ${firstDoc.type}s approved successfully`);
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to approve all');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
     const handleRejectAll = async (entityId: string, entityDocs: PendingDocument[]) => {
-        const reason = prompt('Enter rejection reason:');
-        if (!reason) return;
+        const reason = await confirm({
+            title: 'Reject all documents',
+            destructive: true,
+            input: { label: 'Rejection reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
         try {
             const firstDoc = entityDocs[0];
             if (firstDoc.type === 'test_report') {
-                // Reject all individual test reports
                 for (const doc of entityDocs) {
                     if (doc.report_id) {
                         await api.rejectTestReport(entityId, doc.report_id, reason);
@@ -134,9 +151,9 @@ export default function DocumentsPage() {
                 await api.rejectConsent(entityId, reason);
             }
             await fetchPendingDocuments();
-            alert(`All ${firstDoc.type}s rejected`);
+            toast.success(`All ${firstDoc.type}s rejected`);
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Failed to reject all');
+            toast.error(getApiErrorMessage(err));
         }
     };
 
