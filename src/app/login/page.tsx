@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
+const SHOW_DEV_LOGIN = process.env.NEXT_PUBLIC_SHOW_DEV_LOGIN === 'true';
+
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -59,12 +61,10 @@ export default function LoginPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-xl font-semibold text-gray-900">
-                        Sign in with email
+                        Admin Portal
                     </h1>
                     <p className="mt-2 text-sm text-gray-500">
-                        Make a new doc to bring your words, data,
-                        <br />
-                        and teams together. For free
+                        Sign in to manage banks, donors and compliance
                     </p>
                 </div>
 
@@ -74,17 +74,18 @@ export default function LoginPage() {
                     </div>
                 )}
 
-                {/* Auto-fill button */}
-                <button
-                    type="button"
-                    onClick={fillDevCredentials}
-                    className="mb-3 w-full rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2.5 text-sm text-yellow-800 hover:bg-yellow-100 transition-colors flex items-center justify-between"
-                >
-                    <span>Auto-fill dev credentials</span>
-                    <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                </button>
+                {SHOW_DEV_LOGIN && (
+                    <button
+                        type="button"
+                        onClick={fillDevCredentials}
+                        className="mb-3 w-full rounded-lg bg-yellow-50 border border-yellow-200 px-4 py-2.5 text-sm text-yellow-800 hover:bg-yellow-100 transition-colors flex items-center justify-between"
+                    >
+                        <span>Auto-fill dev credentials</span>
+                        <svg className="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                    </button>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-3">
                     {/* Email */}

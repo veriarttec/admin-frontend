@@ -20,6 +20,9 @@ interface PendingDocument {
     test_name?: string;
     file_url?: string;
     status?: string;
+    reviewed_at?: string;
+    reviewed_by?: string;
+    review_notes?: string;
 }
 
 export default function DocumentsPage() {
@@ -63,7 +66,7 @@ export default function DocumentsPage() {
         const notes = prompt('Enter verification notes (optional):');
         try {
             if (doc.type === 'certification' && doc.document_index !== undefined) {
-                await api.verifyDocument('bank', doc.entity_id, doc.document_index, notes || undefined);
+                await api.verifyBankDocument(doc.entity_id, doc.document_index, notes || undefined);
             } else if (doc.type === 'consent' && doc.consent_id) {
                 await api.approveConsent(doc.entity_id, notes || undefined);
             } else if (doc.type === 'test_report' && doc.report_id) {
@@ -81,7 +84,7 @@ export default function DocumentsPage() {
         if (!reason) return;
         try {
             if (doc.type === 'certification' && doc.document_index !== undefined) {
-                await api.rejectDocument('bank', doc.entity_id, doc.document_index, reason);
+                await api.rejectBankDocument(doc.entity_id, doc.document_index, reason);
             } else if (doc.type === 'consent' && doc.consent_id) {
                 await api.rejectConsent(doc.entity_id, reason);
             } else if (doc.type === 'test_report' && doc.report_id) {

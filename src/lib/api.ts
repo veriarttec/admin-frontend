@@ -1,5 +1,11 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
+// Extract a human-readable message from an API error
+export function getApiErrorMessage(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
+    if (err instanceof Error && err.message) return err.message;
+    return fallback;
+}
+
 interface LoginCredentials {
     email: string;
     password: string;
