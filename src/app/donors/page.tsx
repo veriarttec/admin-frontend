@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
+import { EmptyState } from '@/components/TablePrimitives';
 
 interface Donor {
     id: string;
@@ -201,8 +202,16 @@ export default function DonorsPage() {
                                 ))}
                                 {(!data?.items || data.items.length === 0) && (
                                     <tr>
-                                        <td colSpan={7} className="text-center text-gray-500">
-                                            No donors found
+                                        <td colSpan={7}>
+                                            <EmptyState
+                                                title="No donors found"
+                                                description="Donors appear here once they register or are created."
+                                                action={
+                                                    <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+                                                        + Create Donor
+                                                    </button>
+                                                }
+                                            />
                                         </td>
                                     </tr>
                                 )}

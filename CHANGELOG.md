@@ -9,6 +9,13 @@ All notable changes to the VeriART admin frontend.
   documents no longer open as raw storage URLs in a new tab.
 - SWR live-data layer: dashboards and queues auto-refresh (30s polling + focus
   revalidation); actions update lists via `mutate()` without reloads.
+- Brand fonts (Inter/Merriweather/Geist, `.font-data` mono utility), restyled
+  login on the shared VeriART card template, path-based breadcrumbs.
+- Railway-host → `NEXT_PUBLIC_CANONICAL_HOST` permanent redirect.
+
+### Changed
+- Shared StatusBadge across banks/donors/documents/subscriptions tables and
+  detail pages (title-case labels; per-page badge helpers removed).
 
 ## [Gate 1] - 2026-06-12
 

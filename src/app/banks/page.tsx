@@ -6,6 +6,7 @@ import useSWR from 'swr';
 import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
+import { Pagination } from '@/components/TablePrimitives';
 
 interface Bank {
     id: string;
@@ -168,22 +169,12 @@ export default function BanksPage() {
             </div>
 
             {/* Pagination */}
-            {data && data.total_pages > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                    {Array.from({ length: data.total_pages }, (_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setPage(i + 1)}
-                            className={`px-4 py-2 rounded text-sm font-medium ${data.page === i + 1
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                                }`}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <Pagination
+                page={page}
+                totalPages={data?.total_pages ?? 0}
+                onPageChange={setPage}
+                totalItems={data?.total}
+            />
         </DashboardLayout>
     );
 }

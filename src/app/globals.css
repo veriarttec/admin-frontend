@@ -443,6 +443,7 @@ h1, .page-title {
 
 .table-compact {
   width: 100%;
+  overflow-x: auto;
 }
 
 .table-compact table {

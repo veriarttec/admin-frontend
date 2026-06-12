@@ -8,6 +8,7 @@ import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
+import Tooltip from '@/components/Tooltip';
 
 interface BankFullDetail {
     id: string;
@@ -395,20 +396,24 @@ export default function BankDetailPage() {
                                                         </button>
                                                     )}
                                                     {doc.status !== 'verified' && (
-                                                        <button
-                                                            onClick={() => handleVerifyDocument(index)}
-                                                            className="btn-success"
-                                                        >
-                                                            ✓ Verify
-                                                        </button>
+                                                        <Tooltip label="Mark document as verified">
+                                                            <button
+                                                                onClick={() => handleVerifyDocument(index)}
+                                                                className="btn-success"
+                                                            >
+                                                                ✓ Verify
+                                                            </button>
+                                                        </Tooltip>
                                                     )}
                                                     {doc.status !== 'rejected' && (
-                                                        <button
-                                                            onClick={() => handleRejectDocument(index)}
-                                                            className="btn-danger"
-                                                        >
-                                                            ✗ Reject
-                                                        </button>
+                                                        <Tooltip label="Reject document">
+                                                            <button
+                                                                onClick={() => handleRejectDocument(index)}
+                                                                className="btn-danger"
+                                                            >
+                                                                ✗ Reject
+                                                            </button>
+                                                        </Tooltip>
                                                     )}
                                                 </div>
                                             </div>

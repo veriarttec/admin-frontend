@@ -14,9 +14,10 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
+    // Values come from env so production bundles never contain credentials
     const fillDevCredentials = () => {
-        setEmail('admin@artconnect.com');
-        setPassword('Admin@2025');
+        setEmail(process.env.NEXT_PUBLIC_DEV_LOGIN_EMAIL || '');
+        setPassword(process.env.NEXT_PUBLIC_DEV_LOGIN_PASSWORD || '');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
