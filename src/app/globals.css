@@ -42,13 +42,10 @@ body {
   font-family: var(--font-geist-sans), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Dense data surfaces (tables, IDs) use the mono stack */
-table {
+/* Opt-in mono for IDs, dates and numeric data cells */
+.font-data {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 13px;
-}
-table th {
-  font-family: var(--font-geist-sans), var(--font-inter), sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 h1, .page-title {

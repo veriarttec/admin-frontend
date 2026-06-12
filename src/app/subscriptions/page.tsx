@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface SubscriptionSummary {
     tier: string;
@@ -413,16 +414,11 @@ export default function SubscriptionsPage() {
                                                         <span className="badge badge-info">{sub.subscription_tier || 'None'}</span>
                                                     </td>
                                                     <td>
-                                                        {sub.is_subscribed ? (
-                                                            sub.subscription_expires_at &&
-                                                            new Date(sub.subscription_expires_at) < new Date() ? (
-                                                                <span className="badge badge-danger">Expired</span>
-                                                            ) : (
-                                                                <span className="badge badge-success">Active</span>
-                                                            )
-                                                        ) : (
-                                                            <span className="badge badge-warning">Inactive</span>
-                                                        )}
+                                                        <StatusBadge status={
+                                                            !sub.is_subscribed ? 'inactive' :
+                                                            sub.subscription_expires_at && new Date(sub.subscription_expires_at) < new Date() ? 'expired' :
+                                                            'active'
+                                                        } />
                                                     </td>
                                                     <td className="text-gray-700">
                                                         {sub.subscription_started_at

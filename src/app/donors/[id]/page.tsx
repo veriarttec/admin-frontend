@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface StateHistoryItem {
     id: string;
@@ -353,23 +354,6 @@ export default function DonorDetailPage() {
         );
     }
 
-    const getStateBadgeClass = (state: string) => {
-        if (state === 'donor_onboarded') return 'badge-success';
-        if (['consent_verified', 'tests_pending', 'eligibility_decision'].includes(state)) return 'badge-info';
-        return 'badge-warning';
-    };
-
-    const getEligibilityBadgeClass = (status: string) => {
-        if (status === 'approved') return 'badge-success';
-        if (status === 'rejected') return 'badge-danger';
-        return 'badge-warning';
-    };
-
-    const getDocumentStatusBadge = (status?: string) => {
-        if (status === 'verified') return <span className="badge badge-success">Verified</span>;
-        if (status === 'rejected') return <span className="badge badge-danger">Rejected</span>;
-        return <span className="badge badge-warning">Pending</span>;
-    };
 
     const fullName = donor.first_name && donor.last_name
         ? `${donor.first_name} ${donor.last_name}`
@@ -390,12 +374,8 @@ export default function DonorDetailPage() {
                         </div>
                         <div className="flex gap-3 items-start">
                             <div className="flex flex-col gap-2">
-                                <span className={`badge ${getStateBadgeClass(donor.state)}`}>
-                                    {donor.state.replace('_', ' ')}
-                                </span>
-                                <span className={`badge ${getEligibilityBadgeClass(donor.eligibility_status)}`}>
-                                    {donor.eligibility_status}
-                                </span>
+                                <StatusBadge status={donor.state} />
+                                <StatusBadge status={donor.eligibility_status} />
                             </div>
                             {!editMode && (
                                 <div className="flex gap-2">
@@ -606,7 +586,7 @@ export default function DonorDetailPage() {
                                                             )}
                                                         </div>
                                                         <div className="flex items-center gap-3">
-                                                            {getDocumentStatusBadge(doc.status)}
+                                                            <StatusBadge status={doc.status ?? 'pending'} />
                                                             <button
                                                                 onClick={() => viewDocument(doc.url)}
                                                                 className="btn-secondary"
@@ -672,9 +652,7 @@ export default function DonorDetailPage() {
                                                                 </p>
                                                             )}
                                                         </div>
-                                                        <span className={`badge ${consent.status === 'verified' ? 'badge-success' : consent.status === 'rejected' ? 'badge-danger' : 'badge-warning'}`}>
-                                                            {consent.status}
-                                                        </span>
+                                                        <StatusBadge status={consent.status} />
                                                     </div>
                                                 </div>
                                             ))}
@@ -706,13 +684,7 @@ export default function DonorDetailPage() {
                                                             <p className="font-medium text-gray-900 text-sm">
                                                                 {session.method === 'video' ? 'Video Call' : session.method === 'in_person' ? 'In-Person' : session.method || 'Counseling Session'}
                                                             </p>
-                                                            <span className={`text-xs px-2 py-0.5 rounded-full ${session.status === 'completed' ? 'bg-green-100 text-green-700' :
-                                                                session.status === 'scheduled' ? 'bg-blue-100 text-blue-700' :
-                                                                    session.status === 'requested' ? 'bg-yellow-100 text-yellow-700' :
-                                                                        'bg-gray-100 text-gray-700'
-                                                                }`}>
-                                                                {session.status}
-                                                            </span>
+                                                            <StatusBadge status={session.status} />
                                                         </div>
                                                         <div className="ml-6 mt-1 space-y-0.5">
                                                             {session.scheduled_at && (
@@ -763,21 +735,15 @@ export default function DonorDetailPage() {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-700">Consent Status</span>
-                                            <span className={`badge ${donor.consent_pending ? 'badge-warning' : 'badge-success'}`}>
-                                                {donor.consent_pending ? 'Pending' : 'Verified'}
-                                            </span>
+                                            <StatusBadge status={donor.consent_pending ? 'pending' : 'verified'} />
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-700">Counseling Status</span>
-                                            <span className={`badge ${donor.counseling_pending ? 'badge-warning' : 'badge-success'}`}>
-                                                {donor.counseling_pending ? 'Pending' : 'Completed'}
-                                            </span>
+                                            <StatusBadge status={donor.counseling_pending ? 'pending' : 'completed'} />
                                         </div>
                                         <div className="flex justify-between items-center">
                                             <span className="text-gray-700">Tests Status</span>
-                                            <span className={`badge ${donor.tests_pending ? 'badge-warning' : 'badge-success'}`}>
-                                                {donor.tests_pending ? 'Pending' : 'Verified'}
-                                            </span>
+                                            <StatusBadge status={donor.tests_pending ? 'pending' : 'verified'} />
                                         </div>
                                     </div>
                                 </div>

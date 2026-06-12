@@ -19,6 +19,19 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    // Send Railway-hostname traffic to the clean custom domain when configured
+    const canonicalHost = process.env.NEXT_PUBLIC_CANONICAL_HOST;
+    if (!canonicalHost) return [];
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host" as const, value: "(?<railway>.*\\.up\\.railway\\.app)" }],
+        destination: `https://${canonicalHost}/:path*`,
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

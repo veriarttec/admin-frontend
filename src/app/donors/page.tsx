@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface Donor {
     id: string;
@@ -110,18 +111,6 @@ export default function DonorsPage() {
         }
     };
 
-    const getStateBadge = (state: string) => {
-        if (state === 'donor_onboarded') return 'badge-success';
-        if (['consent_verified', 'tests_pending', 'eligibility_decision'].includes(state)) return 'badge-info';
-        if (['visitor', 'bank_selected', 'lead_created'].includes(state)) return 'badge-warning';
-        return 'badge-secondary';
-    };
-
-    const getEligibilityBadge = (status: string) => {
-        if (status === 'approved') return 'badge-success';
-        if (status === 'rejected') return 'badge-danger';
-        return 'badge-warning';
-    };
 
     return (
         <DashboardLayout title="Donors" onRefresh={() => mutate()}>
@@ -190,14 +179,10 @@ export default function DonorsPage() {
                                         <td className="text-gray-600">{donor.email || '-'}</td>
                                         <td className="text-gray-900">{donor.bank_name || <span className="text-gray-500">No bank</span>}</td>
                                         <td>
-                                            <span className={`badge ${getStateBadge(donor.state)}`}>
-                                                {donor.state.replace('_', ' ')}
-                                            </span>
+                                            <StatusBadge status={donor.state} />
                                         </td>
                                         <td>
-                                            <span className={`badge ${getEligibilityBadge(donor.eligibility_status)}`}>
-                                                {donor.eligibility_status}
-                                            </span>
+                                            <StatusBadge status={donor.eligibility_status} />
                                         </td>
                                         <td className="text-gray-600">{new Date(donor.created_at).toLocaleDateString()}</td>
                                         <td>

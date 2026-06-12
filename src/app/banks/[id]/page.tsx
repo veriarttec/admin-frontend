@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface BankFullDetail {
     id: string;
@@ -173,10 +174,8 @@ export default function BankDetailPage() {
             onRefresh={() => { mutate(); mutateStorage(); }}
             actions={
                 <div className="flex gap-2 items-center">
-                    <span className={`badge ${bank.is_verified ? 'badge-success' : 'badge-warning'}`}>
-                        {bank.is_verified ? 'Verified' : 'Unverified'}
-                    </span>
-                    <span className="badge badge-info">{bank.state.replace(/_/g, ' ')}</span>
+                    <StatusBadge status={bank.is_verified ? 'verified' : 'unverified'} />
+                    <StatusBadge status={bank.state} />
                     {!isEditing && (
                         <button onClick={() => setIsEditing(true)} className="btn-secondary text-sm">Edit Info</button>
                     )}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface Bank {
     id: string;
@@ -61,16 +62,6 @@ export default function BanksPage() {
         setSubmittedSearch(search);
     };
 
-    const getStateBadge = (state: string) => {
-        const badges: Record<string, string> = {
-            operational: 'badge-success',
-            verified: 'badge-info',
-            subscribed_onboarded: 'badge-info',
-            verification_pending: 'badge-warning',
-            account_created: 'badge-secondary',
-        };
-        return badges[state] || 'badge-secondary';
-    };
 
     const getSubscriptionStatus = (bank: Bank) => {
         if (!bank.is_subscribed) return <span className="badge badge-warning">Not Subscribed</span>;
@@ -144,9 +135,7 @@ export default function BanksPage() {
                                         <td className="font-medium text-gray-900">{bank.name}</td>
                                         <td className="text-gray-600">{bank.email}</td>
                                         <td>
-                                            <span className={`badge ${getStateBadge(bank.state)}`}>
-                                                {bank.state.replace('_', ' ')}
-                                            </span>
+                                            <StatusBadge status={bank.state} />
                                         </td>
                                         <td>{getSubscriptionStatus(bank)}</td>
                                         <td className="text-gray-900 font-medium">{bank.donor_count}</td>

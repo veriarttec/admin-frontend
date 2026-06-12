@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
+import StatusBadge from '@/components/StatusBadge';
 
 interface PendingDocument {
     type: string;
@@ -186,16 +187,6 @@ export default function DocumentsPage() {
         groupedDocs[key].push(doc);
     });
 
-    const getStatusBadge = (status?: string) => {
-        if (!status || status === 'pending') {
-            return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Pending</span>;
-        } else if (status === 'approved') {
-            return <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Approved</span>;
-        } else if (status === 'rejected') {
-            return <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs">Rejected</span>;
-        }
-        return null;
-    };
 
     const getDocumentIcon = (type: string) => {
         switch (type) {
@@ -353,7 +344,7 @@ export default function DocumentsPage() {
                                                                             <p className="text-sm font-medium text-gray-900">
                                                                                 {doc.test_name || doc.test_type || 'Test Report'}
                                                                             </p>
-                                                                            {getStatusBadge(doc.status)}
+                                                                            <StatusBadge status={doc.status} />
                                                                         </div>
                                                                         <p className="text-xs text-gray-500">
                                                                             Uploaded: {doc.uploaded_at ? formatDate(doc.uploaded_at) : 'N/A'}
@@ -369,7 +360,7 @@ export default function DocumentsPage() {
                                                                     <>
                                                                         <div className="flex items-center gap-2 mb-1">
                                                                             <p className="text-sm font-medium text-gray-900">Consent Form</p>
-                                                                            {getStatusBadge(doc.status)}
+                                                                            <StatusBadge status={doc.status} />
                                                                         </div>
                                                                         <p className="text-xs text-gray-500">
                                                                             Signed: {doc.signed_at ? formatDate(doc.signed_at) : 'N/A'}
