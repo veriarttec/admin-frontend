@@ -3,6 +3,15 @@
 :root {
   --background: #FAFEFF;
   --foreground: #494F55;
+  /* Brand tokens (shared with the main app — see DESIGN_SYSTEM.md) */
+  --color-primary: #193A57;
+  --color-secondary: #0FA4A6;
+  --color-tertiary: #E8DDD2;
+  --color-ink: #494F55;
+  --font-hero: var(--font-inter);
+  --font-heading: var(--font-merriweather);
+  --font-body: var(--font-geist-sans), var(--font-inter);
+  --font-mono: var(--font-geist-mono);
   --sidebar-bg: #0FA4A6;
   --sidebar-text: #E8DDD2;
   --sidebar-active: #193A57;
@@ -30,14 +39,27 @@ body {
   min-height: 100vh;
   background-color: #FAFEFF;
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Dense data surfaces (tables, IDs) use the mono stack */
+table {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+}
+table th {
+  font-family: var(--font-geist-sans), var(--font-inter), sans-serif;
+}
+
+h1, .page-title {
+  font-family: var(--font-inter), sans-serif;
 }
 
 /* Only apply dashboard theme to pages with .main-content */
 .main-content {
   background: var(--background);
   color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-geist-sans), var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }

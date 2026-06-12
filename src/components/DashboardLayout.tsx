@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -151,6 +152,7 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
                     </div>
                 )}
                 <div style={{ padding: '24px 32px', maxWidth: '1600px', margin: '0 auto' }}>
+                    <Breadcrumbs />
                     {children}
                 </div>
             </div>

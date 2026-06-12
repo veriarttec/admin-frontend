@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Merriweather } from "next/font/google";
 import { Toaster } from "sonner";
 import { ConfirmDialogProvider } from "@/components/ConfirmDialog";
 import SWRProvider from "@/components/SWRProvider";
@@ -15,6 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const merriweather = Merriweather({
+  variable: "--font-merriweather",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "ArtPriv Admin Portal",
   description: "Admin dashboard for managing banks, donors, and subscriptions",
@@ -28,7 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${merriweather.variable} antialiased`}
       >
         <SWRProvider>
           <ConfirmDialogProvider>
