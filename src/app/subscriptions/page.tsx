@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -44,59 +45,81 @@ interface SubscriptionDetail {
 
 export default function SubscriptionsPage() {
     const confirm = useConfirm();
-    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
-    const [subscriptions, setSubscriptions] = useState<SubscriptionDetail[]>([]);
-    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'analytics' | 'manage' | 'plans'>('analytics');
     const [filterActive, setFilterActive] = useState(true);
-    const [plans, setPlans] = useState<any[]>([]);
     const [editingPlan, setEditingPlan] = useState<any>(null);
     const router = useRouter();
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const { data: analytics, mutate: mutateAnalytics } = useSWR<AnalyticsData>(
+        'subscription-analytics',
+        () => api.getSubscriptionAnalytics(),
+        {
+            refreshInterval: 30_000,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
+        }
+    );
 
-    const fetchData = async () => {
-        try {
-            const analyticsData = await api.getSubscriptionAnalytics();
-            const subscriptionsData = await api.getAllSubscriptions(filterActive);
-            
-            setAnalytics(analyticsData);
-            setSubscriptions(subscriptionsData);
-            
-            // Try to fetch subscription plans, fall back to tier breakdown if not available
+    const { data: subscriptions = [], mutate: mutateSubscriptions } = useSWR<SubscriptionDetail[]>(
+        ['subscriptions', filterActive],
+        () => api.getAllSubscriptions(filterActive),
+        {
+            refreshInterval: 30_000,
+            keepPreviousData: true,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
+        }
+    );
+
+    const { data: rawPlans, mutate: mutatePlans } = useSWR<any[]>(
+        'subscription-plans',
+        async () => {
             try {
                 const plansData = await api.getSubscriptionPlans();
-                // Parse price strings to numbers and max_donors strings to numbers
-                const parsedPlans = plansData.map((plan: any) => ({
+                return plansData.map((plan: any) => ({
                     ...plan,
                     price: parseFloat(plan.price),
                     max_donors: plan.max_donors === 'null' || plan.max_donors === null ? null : parseInt(plan.max_donors)
                 }));
-                setPlans(parsedPlans);
-            } catch (err) {
-                // If plans API doesn't exist, use tier breakdown as initial plans
-                if (analyticsData?.tier_breakdown) {
-                    const defaultPlans = analyticsData.tier_breakdown.map((tier: any) => ({
-                        id: tier.tier.toLowerCase().replace(/\s+/g, '_'),
-                        name: tier.tier,
-                        price: tier.revenue_estimate / (tier.count || 1), // Average price
-                        max_donors: null,
-                        description: `${tier.tier} subscription tier`,
-                        features: [],
-                        active_subscriptions: tier.count
-                    }));
-                    setPlans(defaultPlans);
+            } catch {
+                return [];
+            }
+        },
+        {
+            refreshInterval: 30_000,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
                 }
-            }
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            }
-        } finally {
-            setLoading(false);
+            },
         }
+    );
+
+    // Fall back to tier breakdown when plans API returns nothing and analytics are available
+    const plans: any[] = (rawPlans && rawPlans.length > 0)
+        ? rawPlans
+        : (analytics?.tier_breakdown ?? []).map((tier) => ({
+            id: tier.tier.toLowerCase().replace(/\s+/g, '_'),
+            name: tier.tier,
+            price: tier.revenue_estimate / (tier.count || 1),
+            max_donors: null,
+            description: `${tier.tier} subscription tier`,
+            features: [],
+            active_subscriptions: tier.count
+        }));
+
+    const loading = !analytics && !subscriptions.length && !rawPlans;
+
+    const mutateAll = () => {
+        mutateAnalytics();
+        mutateSubscriptions();
+        mutatePlans();
     };
 
     const handleCancelSubscription = async (bankId: string, bankName: string) => {
@@ -108,7 +131,7 @@ export default function SubscriptionsPage() {
         }))) return;
         try {
             await api.cancelSubscription(bankId);
-            await fetchData();
+            mutateAll();
             toast.success('Subscription cancelled successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -129,7 +152,7 @@ export default function SubscriptionsPage() {
                 max_donors: editingPlan.max_donors,
                 description: editingPlan.description
             });
-            await fetchData();
+            mutateAll();
             setEditingPlan(null);
             toast.success('Plan updated successfully. All banks with this plan will see the updated pricing and details.');
         } catch (err) {
@@ -165,7 +188,7 @@ export default function SubscriptionsPage() {
                 max_donors: null,
                 description: ''
             });
-            await fetchData();
+            mutateAll();
             toast.success('Plan created successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -181,7 +204,7 @@ export default function SubscriptionsPage() {
         }))) return;
         try {
             await api.deleteSubscriptionPlan(planId);
-            await fetchData();
+            mutateAll();
             toast.success('Plan deleted successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -352,7 +375,6 @@ export default function SubscriptionsPage() {
                                         checked={filterActive}
                                         onChange={(e) => {
                                             setFilterActive(e.target.checked);
-                                            fetchData();
                                         }}
                                         className="w-4 h-4"
                                     />

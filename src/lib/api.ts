@@ -1,4 +1,13 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+// Ensure the API base is an absolute URL — a missing scheme (e.g. a bare
+// Railway hostname in NEXT_PUBLIC_API_URL) would make requests resolve
+// relative to the frontend origin and 404.
+function normalizeBaseUrl(raw: string): string {
+    const trimmed = raw.trim().replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+}
+
+const API_BASE = normalizeBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001');
 
 // Extract a human-readable message from an API error
 export function getApiErrorMessage(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
@@ -404,12 +413,6 @@ class AdminAPI {
         return this.request(`/api/admin/documents/pending?${queryParams.toString()}`);
     }
 
-    // Storage - Get document URL
-    async getDocumentUrl(bucket: string, filePath: string) {
-        // This would typically call your backend to get a signed URL from Supabase
-        return this.request(`/api/admin/documents/url?bucket=${bucket}&path=${encodeURIComponent(filePath)}`);
-    }
-
     // Storage - Get bank certification documents from storage
     async getBankStorageDocuments(bankId: string) {
         return this.request(`/api/admin/banks/${bankId}/storage-documents`);
@@ -425,6 +428,13 @@ class AdminAPI {
         const queryParams = new URLSearchParams();
         queryParams.set('bucket', bucket);
         queryParams.set('path', path);
+        return this.request(`/api/admin/documents/signed-url?${queryParams.toString()}`);
+    }
+
+    // Get signed URL from a stored storage URL (resolved server-side)
+    async getSignedDocumentUrlFromStoredUrl(url: string) {
+        const queryParams = new URLSearchParams();
+        queryParams.set('url', url);
         return this.request(`/api/admin/documents/signed-url?${queryParams.toString()}`);
     }
 }

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -29,39 +30,34 @@ interface PendingDocument {
 
 export default function DocumentsPage() {
     const confirm = useConfirm();
-    const [documents, setDocuments] = useState<PendingDocument[]>([]);
-    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'banks' | 'donors'>('donors');
     const [filter, setFilter] = useState<string>('all');
     const router = useRouter();
 
-    useEffect(() => {
-        fetchPendingDocuments();
-    }, []);
-
-    const fetchPendingDocuments = async () => {
-        try {
-            setLoading(true);
-            const response = await api.getPendingDocuments();
-            setDocuments(response.pending_documents || []);
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            }
-        } finally {
-            setLoading(false);
+    const { data: documentsResponse, isLoading: loading, mutate } = useSWR(
+        'pending-documents',
+        () => api.getPendingDocuments(),
+        {
+            refreshInterval: 30_000,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
         }
-    };
+    );
+
+    const documents: PendingDocument[] = documentsResponse?.pending_documents ?? [];
 
     // Filter documents by entity type and document type
     const filteredDocuments = documents.filter(doc => {
         // Tab filter
         if (activeTab === 'banks' && doc.entity_type !== 'bank') return false;
         if (activeTab === 'donors' && doc.entity_type !== 'donor') return false;
-        
+
         // Document type filter
         if (filter !== 'all' && doc.type !== filter) return false;
-        
+
         return true;
     });
 
@@ -79,7 +75,7 @@ export default function DocumentsPage() {
             } else if (doc.type === 'test_report' && doc.report_id) {
                 await api.approveTestReport(doc.entity_id, doc.report_id, notes || undefined);
             }
-            await fetchPendingDocuments();
+            mutate();
             toast.success('Document approved successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -101,7 +97,7 @@ export default function DocumentsPage() {
             } else if (doc.type === 'test_report' && doc.report_id) {
                 await api.rejectTestReport(doc.entity_id, doc.report_id, reason);
             }
-            await fetchPendingDocuments();
+            mutate();
             toast.success('Document rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -125,7 +121,7 @@ export default function DocumentsPage() {
             } else if (firstDoc.type === 'consent') {
                 await api.approveConsent(entityId, notes || undefined);
             }
-            await fetchPendingDocuments();
+            mutate();
             toast.success(`All ${firstDoc.type}s approved successfully`);
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -150,7 +146,7 @@ export default function DocumentsPage() {
             } else if (firstDoc.type === 'consent') {
                 await api.rejectConsent(entityId, reason);
             }
-            await fetchPendingDocuments();
+            mutate();
             toast.success(`All ${firstDoc.type}s rejected`);
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -158,7 +154,8 @@ export default function DocumentsPage() {
     };
 
     const viewDocument = (url: string) => {
-        window.open(url, '_blank');
+        const name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'Document');
+        router.push(`/documents/view?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`);
     };
 
     const viewEntity = (entityType: string, entityId: string) => {
@@ -320,7 +317,7 @@ export default function DocumentsPage() {
                     {Object.entries(groupedDocs).map(([key, docs]) => {
                         const firstDoc = docs[0];
                         const pendingDocs = docs.filter(d => !d.status || d.status === 'pending');
-                        
+
                         return (
                             <div key={key} className="table-card">
                                 <div className="p-6">
@@ -340,7 +337,7 @@ export default function DocumentsPage() {
                                                         {docs.length} {firstDoc.type === 'test_report' ? 'report' : 'document'}{docs.length !== 1 ? 's' : ''}
                                                     </span>
                                                 </div>
-                                                
+
                                                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                                                     {firstDoc.entity_name}
                                                 </h3>
@@ -390,7 +387,7 @@ export default function DocumentsPage() {
                                                                     </>
                                                                 )}
                                                             </div>
-                                                            
+
                                                             <div className="flex gap-2 ml-4">
                                                                 {doc.file_url && (
                                                                     <button
@@ -432,7 +429,7 @@ export default function DocumentsPage() {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="flex flex-col gap-2 min-w-[200px]">
                                             <button
                                                 onClick={() => viewEntity(firstDoc.entity_type, firstDoc.entity_id)}
@@ -440,7 +437,7 @@ export default function DocumentsPage() {
                                             >
                                                 View {firstDoc.entity_type === 'bank' ? 'Bank' : 'Donor'}
                                             </button>
-                                            
+
                                             {pendingDocs.length > 1 && (
                                                 <div className="flex gap-2">
                                                     <button

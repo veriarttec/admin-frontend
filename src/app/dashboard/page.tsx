@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 
@@ -39,41 +39,32 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
-    const [data, setData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const router = useRouter();
 
-    useEffect(() => {
-        const fetchDashboard = async () => {
-            try {
-                const dashboardData = await api.getDashboard();
-                setData(dashboardData);
-            } catch (err) {
+    const { data, isLoading, error } = useSWR<DashboardData>(
+        'dashboard',
+        () => api.getDashboard(),
+        {
+            refreshInterval: 30_000,
+            onError: (err) => {
                 if (err instanceof Error && err.message.includes('401')) {
                     router.push('/login');
-                } else {
-                    setError(err instanceof Error ? err.message : 'Failed to load dashboard');
                 }
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDashboard();
-    }, [router]);
+            },
+        }
+    );
 
     const stats = data?.stats;
 
     return (
         <DashboardLayout title="Dashboard">
-            {loading && (
+            {isLoading && (
                 <div className="text-center py-8 text-gray-500">Loading dashboard...</div>
             )}
-            {error && (
-                <div className="text-center py-8 text-red-500">{error}</div>
+            {error && !error.message?.includes('401') && (
+                <div className="text-center py-8 text-red-500">{error.message || 'Failed to load dashboard'}</div>
             )}
-            {!loading && !error && (
+            {!isLoading && !error && (
                 <div className="dashboard-container">
                     {/* Stats Grid */}
                     <div className="stats-grid">

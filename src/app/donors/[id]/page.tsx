@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -109,9 +110,6 @@ interface DonorDetail {
 
 export default function DonorDetailPage() {
     const confirm = useConfirm();
-    const [donor, setDonor] = useState<DonorDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [editMode, setEditMode] = useState(false);
     const [expandedSections, setExpandedSections] = useState({
         consent_forms: true,
@@ -137,36 +135,27 @@ export default function DonorDetailPage() {
     const params = useParams();
     const donorId = params.id as string;
 
-    const fetchDonor = async () => {
-        try {
-            const data = await api.getDonorFullDetails(donorId);
-            setDonor(data);
-            setEditData({
-                first_name: data.first_name || '',
-                last_name: data.last_name || '',
-                phone: data.phone || '',
-                email: data.email || '',
-                address: data.address || '',
-                date_of_birth: data.date_of_birth ? data.date_of_birth.split('T')[0] : ''
-            });
-
-
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            } else {
-                setError(getApiErrorMessage(err, 'Failed to load donor'));
-            }
-        } finally {
-            setLoading(false);
+    const { data: donor, isLoading, error, mutate } = useSWR<DonorDetail>(
+        donorId ? ['donor', donorId] : null,
+        () => api.getDonorFullDetails(donorId),
+        {
+            onSuccess: (data) => {
+                setEditData({
+                    first_name: data.first_name || '',
+                    last_name: data.last_name || '',
+                    phone: data.phone || '',
+                    email: data.email || '',
+                    address: data.address || '',
+                    date_of_birth: data.date_of_birth ? data.date_of_birth.split('T')[0] : ''
+                });
+            },
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
         }
-    };
-
-    useEffect(() => {
-        if (donorId) {
-            fetchDonor();
-        }
-    }, [donorId, router]);
+    );
 
     const handleEdit = () => {
         setEditMode(true);
@@ -190,7 +179,7 @@ export default function DonorDetailPage() {
         try {
             await api.updateDonorInfo(donorId, editData);
             setEditMode(false);
-            await fetchDonor();
+            mutate();
             toast.success('Donor information updated successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -221,7 +210,7 @@ export default function DonorDetailPage() {
         if (notes === null) return;
         try {
             await api.verifyDocument('donor', donorId, docUrl, notes || undefined);
-            await fetchDonor();
+            mutate();
             toast.success('Document verified successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -237,7 +226,7 @@ export default function DonorDetailPage() {
         if (reason === null) return;
         try {
             await api.rejectDocument('donor', donorId, docUrl, reason);
-            await fetchDonor();
+            mutate();
             toast.success('Document rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -252,7 +241,7 @@ export default function DonorDetailPage() {
         if (notes === null) return;
         try {
             await api.approveConsent(donorId, notes || undefined);
-            await fetchDonor();
+            mutate();
             toast.success('Consent approved successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -268,7 +257,7 @@ export default function DonorDetailPage() {
         if (reason === null) return;
         try {
             await api.rejectConsent(donorId, reason);
-            await fetchDonor();
+            mutate();
             toast.success('Consent rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -283,7 +272,7 @@ export default function DonorDetailPage() {
         if (notes === null) return;
         try {
             await api.approveTests(donorId, notes || undefined);
-            await fetchDonor();
+            mutate();
             toast.success('Test results approved successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -299,7 +288,7 @@ export default function DonorDetailPage() {
         if (reason === null) return;
         try {
             await api.rejectTests(donorId, reason);
-            await fetchDonor();
+            mutate();
             toast.success('Test results rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -314,7 +303,7 @@ export default function DonorDetailPage() {
         if (notes === null) return;
         try {
             await api.approveTestReport(donorId, reportId, notes || undefined);
-            await fetchDonor();
+            mutate();
             toast.success('Test report approved successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -330,7 +319,7 @@ export default function DonorDetailPage() {
         if (reason === null) return;
         try {
             await api.rejectTestReport(donorId, reportId, reason);
-            await fetchDonor();
+            mutate();
             toast.success('Test report rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -338,10 +327,11 @@ export default function DonorDetailPage() {
     };
 
     const viewDocument = (url: string) => {
-        window.open(url, '_blank');
+        const name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'Document');
+        router.push(`/documents/view?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`);
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <DashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
@@ -351,11 +341,13 @@ export default function DonorDetailPage() {
         );
     }
 
-    if (error || !donor) {
+    const errorMessage = error ? getApiErrorMessage(error, 'Failed to load donor') : '';
+
+    if (errorMessage || !donor) {
         return (
             <DashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
-                    <div className="text-red-600">{error || 'Donor not found'}</div>
+                    <div className="text-red-600">{errorMessage || 'Donor not found'}</div>
                 </div>
             </DashboardLayout>
         );
@@ -384,7 +376,7 @@ export default function DonorDetailPage() {
         : 'Unknown Donor';
 
     return (
-        <DashboardLayout title={fullName} onRefresh={fetchDonor}>
+        <DashboardLayout title={fullName} onRefresh={() => mutate()}>
             <div className="p-8">
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}

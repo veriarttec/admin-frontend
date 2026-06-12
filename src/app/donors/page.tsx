@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 
@@ -34,9 +35,8 @@ const DONOR_STATES = [
 ];
 
 export default function DonorsPage() {
-    const [data, setData] = useState<DonorListResponse | null>(null);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [submittedSearch, setSubmittedSearch] = useState('');
     const [stateFilter, setStateFilter] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newDonor, setNewDonor] = useState({
@@ -49,36 +49,46 @@ export default function DonorsPage() {
     });
     const router = useRouter();
 
-    useEffect(() => {
-        fetchDonors();
-    }, [stateFilter]);
-
-    const fetchDonors = async () => {
-        try {
-            setLoading(true);
+    const { data, isLoading, mutate } = useSWR<DonorListResponse>(
+        ['donors', stateFilter, submittedSearch],
+        () => {
             const params: any = {};
             if (stateFilter) params.state = stateFilter;
-            if (search) params.search = search;
-
-            const response = await api.getDonors(params);
-            setData(response);
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            }
-        } finally {
-            setLoading(false);
+            if (submittedSearch) params.search = submittedSearch;
+            return api.getDonors(params);
+        },
+        {
+            refreshInterval: 30_000,
+            keepPreviousData: true,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
         }
-    };
+    );
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchDonors();
+        setSubmittedSearch(search);
     };
 
     const handleCreateDonor = async () => {
         if (!newDonor.first_name || !newDonor.last_name) {
             toast.error('First name and last name are required');
+            return;
+        }
+        const nameRe = /^[A-Za-z][A-Za-z\s.'-]*$/;
+        if (!nameRe.test(newDonor.first_name.trim()) || !nameRe.test(newDonor.last_name.trim())) {
+            toast.error('Names can only contain letters, spaces, apostrophes, hyphens and dots');
+            return;
+        }
+        if (newDonor.email && !/^[^\s@]+@[^\s@]{3,}\.[^\s@]{2,}$/.test(newDonor.email.trim())) {
+            toast.error('Enter a valid email address');
+            return;
+        }
+        if (newDonor.phone && !/^(\+91)?[\s-]?[6-9]\d{9}$/.test(newDonor.phone.replace(/[\s\-()]/g, ''))) {
+            toast.error('Enter a valid 10-digit Indian mobile number');
             return;
         }
 
@@ -94,7 +104,7 @@ export default function DonorsPage() {
                 address: '',
                 date_of_birth: ''
             });
-            fetchDonors();
+            mutate();
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
@@ -114,7 +124,7 @@ export default function DonorsPage() {
     };
 
     return (
-        <DashboardLayout title="Donors" onRefresh={fetchDonors}>
+        <DashboardLayout title="Donors" onRefresh={() => mutate()}>
             {/* Filters */}
             <div className="table-card mb-6">
                 <div className="p-4">
@@ -153,7 +163,7 @@ export default function DonorsPage() {
 
             {/* Table */}
             <div className="table-card">
-                {loading ? (
+                {isLoading ? (
                     <div className="p-12 text-center text-gray-500">Loading donors...</div>
                 ) : (
                     <div className="table-compact">

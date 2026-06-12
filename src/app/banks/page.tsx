@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 
@@ -27,39 +28,37 @@ interface BankListResponse {
 }
 
 export default function BanksPage() {
-    const [data, setData] = useState<BankListResponse | null>(null);
-    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [submittedSearch, setSubmittedSearch] = useState('');
     const [filter, setFilter] = useState<'all' | 'verified' | 'unverified' | 'subscribed'>('all');
+    const [page, setPage] = useState(1);
     const router = useRouter();
 
-    useEffect(() => {
-        fetchBanks();
-    }, [filter]);
-
-    const fetchBanks = async () => {
-        try {
-            setLoading(true);
-            const params: any = {};
+    const { data, isLoading, mutate } = useSWR<BankListResponse>(
+        ['banks', page, filter, submittedSearch],
+        () => {
+            const params: any = { page };
             if (filter === 'verified') params.is_verified = true;
             if (filter === 'unverified') params.is_verified = false;
             if (filter === 'subscribed') params.is_subscribed = true;
-            if (search) params.search = search;
-
-            const response = await api.getBanks(params);
-            setData(response);
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            }
-        } finally {
-            setLoading(false);
+            if (submittedSearch) params.search = submittedSearch;
+            return api.getBanks(params);
+        },
+        {
+            refreshInterval: 30_000,
+            keepPreviousData: true,
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
         }
-    };
+    );
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchBanks();
+        setPage(1);
+        setSubmittedSearch(search);
     };
 
     const getStateBadge = (state: string) => {
@@ -87,7 +86,7 @@ export default function BanksPage() {
     };
 
     return (
-        <DashboardLayout title="Banks" onRefresh={fetchBanks}>
+        <DashboardLayout title="Banks" onRefresh={() => mutate()}>
             {/* Filters */}
             <div className="table-card mb-6">
                 <div className="p-4">
@@ -105,7 +104,10 @@ export default function BanksPage() {
 
                         <select
                             value={filter}
-                            onChange={(e) => setFilter(e.target.value as typeof filter)}
+                            onChange={(e) => {
+                                setFilter(e.target.value as typeof filter);
+                                setPage(1);
+                            }}
                             className="glass-input"
                             style={{ width: 'auto', minWidth: '180px' }}
                         >
@@ -120,7 +122,7 @@ export default function BanksPage() {
 
             {/* Table */}
             <div className="table-card">
-                {loading ? (
+                {isLoading ? (
                     <div className="p-12 text-center text-gray-500">Loading banks...</div>
                 ) : (
                     <div className="table-compact">
@@ -182,7 +184,7 @@ export default function BanksPage() {
                     {Array.from({ length: data.total_pages }, (_, i) => (
                         <button
                             key={i}
-                            onClick={() => api.getBanks({ page: i + 1 }).then(setData)}
+                            onClick={() => setPage(i + 1)}
                             className={`px-4 py-2 rounded text-sm font-medium ${data.page === i + 1
                                 ? 'bg-blue-500 text-white'
                                 : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'

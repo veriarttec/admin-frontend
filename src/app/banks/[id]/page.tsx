@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
+import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -35,55 +36,48 @@ interface BankFullDetail {
 
 export default function BankDetailPage() {
     const confirm = useConfirm();
-    const [bank, setBank] = useState<BankFullDetail | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<any>({});
     const [activeTab, setActiveTab] = useState('overview');
-    const [storageDocuments, setStorageDocuments] = useState<any>(null);
     const router = useRouter();
     const params = useParams();
     const bankId = params.id as string;
 
-    useEffect(() => {
-        fetchBank();
-    }, [bankId]);
-
-    const fetchBank = async () => {
-        try {
-            const data = await api.getBankFullDetails(bankId);
-            setBank(data);
-            setEditData({
-                name: data.name,
-                phone: data.phone,
-                address: data.address,
-                website: data.website,
-                description: data.description,
-            });
-
-            // Fetch storage documents
-            try {
-                const storageDocs = await api.getBankStorageDocuments(bankId);
-                setStorageDocuments(storageDocs);
-            } catch (err) {
-                console.error('Failed to fetch storage documents:', err);
-            }
-        } catch (err) {
-            if (err instanceof Error && err.message.includes('401')) {
-                router.push('/login');
-            } else {
-                setError(getApiErrorMessage(err, 'Failed to load bank'));
-            }
-        } finally {
-            setLoading(false);
+    const { data: bank, isLoading, error, mutate } = useSWR<BankFullDetail>(
+        bankId ? ['bank', bankId] : null,
+        () => api.getBankFullDetails(bankId),
+        {
+            onSuccess: (data) => {
+                setEditData({
+                    name: data.name,
+                    phone: data.phone,
+                    address: data.address,
+                    website: data.website,
+                    description: data.description,
+                });
+            },
+            onError: (err) => {
+                if (err instanceof Error && err.message.includes('401')) {
+                    router.push('/login');
+                }
+            },
         }
-    };
+    );
+
+    const { data: storageDocuments, mutate: mutateStorage } = useSWR(
+        bankId ? ['bank-storage', bankId] : null,
+        () => api.getBankStorageDocuments(bankId),
+        {
+            onError: () => {
+                // Storage documents are best-effort; swallow errors silently
+            },
+        }
+    );
 
     const handleSaveEdit = async () => {
         try {
             await api.updateBank(bankId, editData);
-            await fetchBank();
+            mutate();
             setIsEditing(false);
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -97,7 +91,7 @@ export default function BankDetailPage() {
         }))) return;
         try {
             await api.verifyBank(bankId, 'admin', 'Verified via admin portal');
-            await fetchBank();
+            mutate();
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
@@ -111,7 +105,7 @@ export default function BankDetailPage() {
         if (reason === null) return;
         try {
             await api.changeBankState(bankId, newState, reason);
-            await fetchBank();
+            mutate();
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
@@ -125,7 +119,7 @@ export default function BankDetailPage() {
         if (notes === null) return;
         try {
             await api.verifyBankDocument(bankId, docIndex, notes || undefined);
-            await fetchBank();
+            mutate();
             toast.success('Document verified successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -141,14 +135,14 @@ export default function BankDetailPage() {
         if (reason === null) return;
         try {
             await api.rejectBankDocument(bankId, docIndex, reason);
-            await fetchBank();
+            mutate();
             toast.success('Document rejected');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
     };
 
-    if (loading) {
+    if (isLoading) {
         return (
             <DashboardLayout title="Bank">
                 <div className="p-8 text-gray-500">Loading bank details...</div>
@@ -156,10 +150,12 @@ export default function BankDetailPage() {
         );
     }
 
-    if (error || !bank) {
+    const errorMessage = error ? getApiErrorMessage(error, 'Failed to load bank') : '';
+
+    if (errorMessage || !bank) {
         return (
             <DashboardLayout title="Bank">
-                <div className="p-8 text-red-500">{error || 'Bank not found'}</div>
+                <div className="p-8 text-red-500">{errorMessage || 'Bank not found'}</div>
             </DashboardLayout>
         );
     }
@@ -174,7 +170,7 @@ export default function BankDetailPage() {
     return (
         <DashboardLayout
             title={bank.name}
-            onRefresh={fetchBank}
+            onRefresh={() => { mutate(); mutateStorage(); }}
             actions={
                 <div className="flex gap-2 items-center">
                     <span className={`badge ${bank.is_verified ? 'badge-success' : 'badge-warning'}`}>
@@ -392,14 +388,12 @@ export default function BankDetailPage() {
                                                 </div>
                                                 <div className="flex gap-2 flex-shrink-0">
                                                     {doc.url && (
-                                                        <a
-                                                            href={doc.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
+                                                        <button
+                                                            onClick={() => router.push(`/documents/view?url=${encodeURIComponent(doc.url)}&name=${encodeURIComponent(doc.name || 'Document')}`)}
                                                             className="btn-secondary"
                                                         >
                                                             View
-                                                        </a>
+                                                        </button>
                                                     )}
                                                     {doc.status !== 'verified' && (
                                                         <button
@@ -437,7 +431,7 @@ export default function BankDetailPage() {
                 )}
 
                 {activeTab === 'subscription' && (
-                    <SubscriptionTab bank={bank} onUpdate={fetchBank} />
+                    <SubscriptionTab bank={bank} onUpdate={() => mutate()} />
                 )}
 
                 {activeTab === 'donors' && (
