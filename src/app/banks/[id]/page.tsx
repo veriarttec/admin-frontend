@@ -23,6 +23,9 @@ interface BankFullDetail {
     is_verified: boolean;
     verified_at: string | null;
     verified_by: string | null;
+    is_active: boolean;
+    deactivated_at: string | null;
+    deactivation_reason: string | null;
     is_subscribed: boolean;
     subscription_tier: string | null;
     subscription_started_at: string | null;
@@ -41,9 +44,14 @@ export default function BankDetailPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [editData, setEditData] = useState<any>({});
     const [activeTab, setActiveTab] = useState('overview');
+    const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const router = useRouter();
     const params = useParams();
     const bankId = params.id as string;
+
+    useEffect(() => {
+        setIsSuperAdmin(localStorage.getItem('admin_role') === 'super_admin');
+    }, []);
 
     const { data: bank, isLoading, error, mutate } = useSWR<BankFullDetail>(
         bankId ? ['bank', bankId] : null,
@@ -94,6 +102,38 @@ export default function BankDetailPage() {
         try {
             await api.verifyBank(bankId, 'admin', 'Verified via admin portal');
             mutate();
+        } catch (err) {
+            toast.error(getApiErrorMessage(err));
+        }
+    };
+
+    const handleTakeOffline = async () => {
+        const reason = await confirm({
+            title: 'Take bank offline?',
+            description: "This will grey out the bank's entire dashboard and hide its donors from patients until reactivated.",
+            destructive: true,
+            confirmLabel: 'Take offline',
+            input: { label: 'Reason for taking offline', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
+        try {
+            await api.setBankActive(bankId, false, reason);
+            mutate();
+            toast.success('Bank taken offline');
+        } catch (err) {
+            toast.error(getApiErrorMessage(err));
+        }
+    };
+
+    const handleBringOnline = async () => {
+        if (!(await confirm({
+            title: 'Bring bank online?',
+            confirmLabel: 'Bring online',
+        }))) return;
+        try {
+            await api.setBankActive(bankId, true);
+            mutate();
+            toast.success('Bank brought online');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
@@ -175,6 +215,9 @@ export default function BankDetailPage() {
             onRefresh={() => { mutate(); mutateStorage(); }}
             actions={
                 <div className="flex gap-2 items-center">
+                    <span className={`badge ${bank.is_active ? 'badge-success' : 'badge-danger'}`}>
+                        {bank.is_active ? 'Online' : 'Offline'}
+                    </span>
                     <StatusBadge status={bank.is_verified ? 'verified' : 'unverified'} />
                     <StatusBadge status={bank.state} />
                     {!isEditing && (
@@ -324,6 +367,35 @@ export default function BankDetailPage() {
                                                     <option value="operational">Operational</option>
                                                 </select>
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="table-card">
+                                        <div className="table-card-header">
+                                            <h2>Availability</h2>
+                                        </div>
+                                        <div className="p-6 space-y-3">
+                                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                                                <span className="text-gray-600">Status:</span>
+                                                <span className={`badge ${bank.is_active ? 'badge-success' : 'badge-danger'}`}>
+                                                    {bank.is_active ? 'Online' : 'Offline'}
+                                                </span>
+                                            </div>
+                                            {!bank.is_active && bank.deactivation_reason && (
+                                                <p className="text-sm text-red-600">Reason: {bank.deactivation_reason}</p>
+                                            )}
+                                            {!bank.is_active && bank.deactivated_at && (
+                                                <InfoRow label="Taken Offline On" value={new Date(bank.deactivated_at).toLocaleDateString()} asRow />
+                                            )}
+                                            {isSuperAdmin ? (
+                                                bank.is_active ? (
+                                                    <button onClick={handleTakeOffline} className="btn-danger w-full">Take Offline</button>
+                                                ) : (
+                                                    <button onClick={handleBringOnline} className="btn-primary w-full">Bring Online</button>
+                                                )
+                                            ) : (
+                                                <p className="text-xs text-gray-500">Only super admins can change availability.</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

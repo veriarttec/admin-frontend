@@ -167,6 +167,24 @@ class AdminAPI {
         return this.request(`/api/admin/donors/${donorId}`);
     }
 
+    // Donor Legal Documents
+    async getDonorDocuments(donorId: string) {
+        return this.request(`/api/admin/donors/${donorId}/documents`);
+    }
+
+    async deleteDonorDocument(donorId: string, documentId: string) {
+        return this.request(`/api/admin/donors/${donorId}/documents/${documentId}`, {
+            method: 'DELETE',
+        });
+    }
+
+    async requestDocumentReupload(donorId: string, documentId: string, reason: string) {
+        return this.request(`/api/admin/donors/${donorId}/documents/${documentId}/request-reupload`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        });
+    }
+
     // Activity Logs
     async getActivityLogs(params?: { page?: number; entity_type?: string }) {
         const queryParams = new URLSearchParams();
@@ -204,6 +222,13 @@ class AdminAPI {
         return this.request(`/api/admin/banks/${bankId}/state`, {
             method: 'PUT',
             body: JSON.stringify({ to_state: toState, reason }),
+        });
+    }
+
+    async setBankActive(bankId: string, isActive: boolean, reason?: string) {
+        return this.request(`/api/admin/banks/${bankId}/active`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: isActive, reason }),
         });
     }
 

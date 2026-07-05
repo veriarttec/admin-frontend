@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import useSWR from 'swr';
@@ -28,6 +28,30 @@ interface Document {
     verified_by?: string;
     verification_notes?: string;
     rejection_reason?: string;
+}
+
+interface LegalDocument {
+    id: string;
+    type: string;
+    status: string;
+    file_url: string;
+    file_name: string;
+    rejection_reason?: string | null;
+    uploaded_at?: string;
+    verified_at?: string;
+    verified_by?: string;
+}
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+    government_id: 'Government ID',
+    proof_of_address: 'Proof of Address',
+    marriage_certificate: 'Marriage Certificate',
+    children_birth_certificate: "Children's Birth Certificate",
+    other: 'Other',
+};
+
+function documentTypeLabel(type: string): string {
+    return DOCUMENT_TYPE_LABELS[type] || type.replace(/_/g, ' ');
 }
 
 interface ConsentDocument {
@@ -87,6 +111,7 @@ interface DonorDetail {
     created_at: string;
     address: string | null;
     date_of_birth: string | null;
+    profile_picture_url: string | null;
     donor_type: string | null;
     height_cm: number | null;
     weight_kg: number | null;
@@ -133,6 +158,8 @@ export default function DonorDetailPage() {
             [section]: !prev[section]
         }));
     };
+    const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+    const [showProfilePicture, setShowProfilePicture] = useState(false);
     const params = useParams();
     const donorId = params.id as string;
 
@@ -157,6 +184,31 @@ export default function DonorDetailPage() {
             },
         }
     );
+
+    const { data: legalDocuments, mutate: mutateDocuments } = useSWR<LegalDocument[]>(
+        donorId ? ['donor-documents', donorId] : null,
+        () => api.getDonorDocuments(donorId),
+    );
+
+    useEffect(() => {
+        if (!showProfilePicture) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setShowProfilePicture(false);
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [showProfilePicture]);
+
+    const handleViewProfilePicture = async () => {
+        if (!donor?.profile_picture_url) return;
+        try {
+            const { url } = await api.getSignedDocumentUrlFromStoredUrl(donor.profile_picture_url);
+            setProfilePictureUrl(url);
+            setShowProfilePicture(true);
+        } catch (err) {
+            toast.error(getApiErrorMessage(err, 'Failed to load profile picture'));
+        }
+    };
 
     const handleEdit = () => {
         setEditMode(true);
@@ -212,6 +264,7 @@ export default function DonorDetailPage() {
         try {
             await api.verifyDocument('donor', donorId, docUrl, notes || undefined);
             mutate();
+            mutateDocuments();
             toast.success('Document verified successfully');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
@@ -228,7 +281,42 @@ export default function DonorDetailPage() {
         try {
             await api.rejectDocument('donor', donorId, docUrl, reason);
             mutate();
+            mutateDocuments();
             toast.success('Document rejected');
+        } catch (err) {
+            toast.error(getApiErrorMessage(err));
+        }
+    };
+
+    const handleRequestReupload = async (doc: LegalDocument) => {
+        const reason = await confirm({
+            title: 'Request re-upload',
+            description: `The donor will be asked to re-upload their ${documentTypeLabel(doc.type)}.`,
+            input: { label: 'Reason', required: true, multiline: true },
+        }) as string | null;
+        if (reason === null) return;
+        try {
+            await api.requestDocumentReupload(donorId, doc.id, reason);
+            mutateDocuments();
+            mutate();
+            toast.success('Re-upload requested');
+        } catch (err) {
+            toast.error(getApiErrorMessage(err));
+        }
+    };
+
+    const handleDeleteDocument = async (doc: LegalDocument) => {
+        if (!(await confirm({
+            title: 'Delete document?',
+            description: `This permanently deletes the file from storage. This cannot be undone.`,
+            destructive: true,
+            confirmLabel: 'Delete document',
+        }))) return;
+        try {
+            await api.deleteDonorDocument(donorId, doc.id);
+            mutateDocuments();
+            mutate();
+            toast.success('Document deleted');
         } catch (err) {
             toast.error(getApiErrorMessage(err));
         }
@@ -365,12 +453,30 @@ export default function DonorDetailPage() {
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <header className="mb-8 flex justify-between items-start">
-                        <div>
-                            <button onClick={() => router.push('/donors')} className="text-blue-600 hover:text-blue-700 mb-2 text-sm">
-                                ← Back to Donors
+                        <div className="flex items-start gap-4">
+                            <button
+                                onClick={donor.profile_picture_url ? handleViewProfilePicture : undefined}
+                                disabled={!donor.profile_picture_url}
+                                className="flex-shrink-0 w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-xl font-semibold text-white bg-gray-400 mt-1"
+                                title={donor.profile_picture_url ? 'View profile picture' : undefined}
+                                style={{ cursor: donor.profile_picture_url ? 'pointer' : 'default' }}
+                            >
+                                {donor.profile_picture_url ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img src={donor.profile_picture_url} alt={fullName} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span>
+                                        {(donor.first_name?.[0] || '') + (donor.last_name?.[0] || '') || '?'}
+                                    </span>
+                                )}
                             </button>
-                            <h1 className="text-3xl font-bold text-gray-900">{fullName}</h1>
-                            <p className="text-gray-600 mt-1">{donor.email || 'No email'}</p>
+                            <div>
+                                <button onClick={() => router.push('/donors')} className="text-blue-600 hover:text-blue-700 mb-2 text-sm">
+                                    ← Back to Donors
+                                </button>
+                                <h1 className="text-3xl font-bold text-gray-900">{fullName}</h1>
+                                <p className="text-gray-600 mt-1">{donor.email || 'No email'}</p>
+                            </div>
                         </div>
                         <div className="flex gap-3 items-start">
                             <div className="flex flex-col gap-2">
@@ -550,71 +656,72 @@ export default function DonorDetailPage() {
                                 <div className="p-6">
                                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Legal Documents</h2>
 
-                                    {(() => {
-                                        // Robust handling of legal_documents (Array vs Dict)
-                                        let docs: Document[] = [];
-                                        if (Array.isArray(donor.legal_documents)) {
-                                            docs = donor.legal_documents;
-                                        } else if (donor.legal_documents && typeof donor.legal_documents === 'object') {
-                                            // @ts-ignore
-                                            docs = donor.legal_documents.documents || [];
-                                        }
-
-                                        if (docs.length === 0) {
-                                            return <p className="text-gray-500 italic">No documents uploaded.</p>;
-                                        }
-
-                                        return (
-                                            <div className="space-y-3">
-                                                {/* Documents from database */}
-                                                {docs.map((doc, index) => (
-                                                    <div key={`db-${index}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                                        <div className="flex-1">
-                                                            <p className="font-medium text-gray-900">{doc.filename || doc.url?.split('/').pop() || 'Document'}</p>
+                                    {!legalDocuments || legalDocuments.length === 0 ? (
+                                        <p className="text-gray-500 italic">No documents uploaded.</p>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {legalDocuments.map((doc) => (
+                                                <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                                    <div className="flex-1">
+                                                        <p className="font-medium text-gray-900">{documentTypeLabel(doc.type)}</p>
+                                                        <p className="text-sm text-gray-600">{doc.file_name}</p>
+                                                        {doc.uploaded_at && (
                                                             <p className="text-sm text-gray-600">
-                                                                Uploaded: {doc.uploaded_at ? new Date(doc.uploaded_at).toLocaleDateString() : 'N/A'}
+                                                                Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}
                                                             </p>
-                                                            {doc.verified_by && (
-                                                                <p className="text-sm text-gray-600">
-                                                                    Verified by: {doc.verified_by} on {doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : ''}
-                                                                </p>
-                                                            )}
-                                                            {doc.rejection_reason && (
-                                                                <p className="text-sm text-red-600">
-                                                                    Rejected: {doc.rejection_reason}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-3">
-                                                            <StatusBadge status={doc.status ?? 'pending'} />
-                                                            <button
-                                                                onClick={() => viewDocument(doc.url)}
-                                                                className="btn-secondary"
-                                                            >
-                                                                View
-                                                            </button>
-                                                            {doc.status !== 'verified' && doc.status !== 'rejected' && (
-                                                                <>
-                                                                    <button
-                                                                        onClick={() => handleVerifyDocument(doc.url)}
-                                                                        className="btn-primary"
-                                                                    >
-                                                                        Verify
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleRejectDocument(doc.url)}
-                                                                        className="btn-danger"
-                                                                    >
-                                                                        Reject
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                        </div>
+                                                        )}
+                                                        {doc.verified_by && (
+                                                            <p className="text-sm text-gray-600">
+                                                                Verified by: {doc.verified_by} on {doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : ''}
+                                                            </p>
+                                                        )}
+                                                        {doc.rejection_reason && (
+                                                            <p className="text-sm text-red-600">
+                                                                Rejected: {doc.rejection_reason}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                ))}
-                                            </div>
-                                        );
-                                    })()}
+                                                    <div className="flex items-center gap-3">
+                                                        <StatusBadge status={doc.status ?? 'pending'} />
+                                                        <button
+                                                            onClick={() => viewDocument(doc.file_url)}
+                                                            className="btn-secondary"
+                                                        >
+                                                            View
+                                                        </button>
+                                                        {doc.status !== 'verified' && doc.status !== 'rejected' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleVerifyDocument(doc.file_url)}
+                                                                    className="btn-primary"
+                                                                >
+                                                                    Verify
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectDocument(doc.file_url)}
+                                                                    className="btn-danger"
+                                                                >
+                                                                    Reject
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleRequestReupload(doc)}
+                                                            className="btn-secondary"
+                                                        >
+                                                            Request Re-upload
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteDocument(doc)}
+                                                            className="btn-danger"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -782,6 +889,28 @@ export default function DonorDetailPage() {
                     </div>
                 </div>
             </div>
+
+            {showProfilePicture && profilePictureUrl && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90"
+                    onClick={() => setShowProfilePicture(false)}
+                >
+                    <button
+                        onClick={() => setShowProfilePicture(false)}
+                        className="absolute top-6 right-6 text-white text-3xl leading-none hover:text-gray-300"
+                        aria-label="Close"
+                    >
+                        &times;
+                    </button>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                        src={profilePictureUrl}
+                        alt={fullName}
+                        className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </DashboardLayout >
     );
 }

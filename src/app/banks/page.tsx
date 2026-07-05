@@ -14,6 +14,7 @@ interface Bank {
     name: string;
     state: string;
     is_verified: boolean;
+    is_active: boolean;
     is_subscribed: boolean;
     subscription_tier: string | null;
     subscription_expires_at: string | null;
@@ -124,6 +125,7 @@ export default function BanksPage() {
                                     <th>Bank Name</th>
                                     <th>Email</th>
                                     <th>State</th>
+                                    <th>Availability</th>
                                     <th>Subscription</th>
                                     <th>Donors</th>
                                     <th>Created</th>
@@ -137,6 +139,11 @@ export default function BanksPage() {
                                         <td className="text-gray-600">{bank.email}</td>
                                         <td>
                                             <StatusBadge status={bank.state} />
+                                        </td>
+                                        <td>
+                                            <span className={`badge ${bank.is_active ? 'badge-success' : 'badge-danger'}`}>
+                                                {bank.is_active ? 'Online' : 'Offline'}
+                                            </span>
                                         </td>
                                         <td>{getSubscriptionStatus(bank)}</td>
                                         <td className="text-gray-900 font-medium">{bank.donor_count}</td>
@@ -157,7 +164,7 @@ export default function BanksPage() {
                                 ))}
                                 {(!data?.items || data.items.length === 0) && (
                                     <tr>
-                                        <td colSpan={7} className="text-center text-gray-500 py-12">
+                                        <td colSpan={8} className="text-center text-gray-500 py-12">
                                             No banks found
                                         </td>
                                     </tr>
