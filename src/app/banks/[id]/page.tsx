@@ -352,21 +352,25 @@ export default function BankDetailPage() {
                                             {!bank.is_verified && (
                                                 <button onClick={handleVerify} className="btn-primary w-full">Verify Bank</button>
                                             )}
-                                            <div className="pt-2">
-                                                <label className="block text-sm font-medium mb-2">Change State</label>
-                                                <select
-                                                    onChange={(e) => handleStateChange(e.target.value)}
-                                                    value={bank.state}
-                                                    className="glass-input"
-                                                >
-                                                    <option value="account_created">Account Created</option>
-                                                    <option value="verification_pending">Verification Pending</option>
-                                                    <option value="verified">Verified</option>
-                                                    <option value="subscription_pending">Subscription Pending</option>
-                                                    <option value="subscribed_onboarded">Subscribed & Onboarded</option>
-                                                    <option value="operational">Operational</option>
-                                                </select>
-                                            </div>
+                                            {isSuperAdmin ? (
+                                                <div className="pt-2">
+                                                    <label className="block text-sm font-medium mb-2">Change State</label>
+                                                    <select
+                                                        onChange={(e) => handleStateChange(e.target.value)}
+                                                        value={bank.state}
+                                                        className="glass-input"
+                                                    >
+                                                        <option value="account_created">Account Created</option>
+                                                        <option value="verification_pending">Verification Pending</option>
+                                                        <option value="verified">Verified</option>
+                                                        <option value="subscription_pending">Subscription Pending</option>
+                                                        <option value="subscribed_onboarded">Subscribed & Onboarded</option>
+                                                        <option value="operational">Operational</option>
+                                                    </select>
+                                                </div>
+                                            ) : (
+                                                <p className="text-xs text-gray-500">Only super admins can change state.</p>
+                                            )}
                                         </div>
                                     </div>
 
