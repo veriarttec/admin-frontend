@@ -29,7 +29,7 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "ArtPriv Admin Portal",
+  title: "VeriART Admin Portal",
   description: "Admin dashboard for managing banks, donors, and subscriptions",
 };
 

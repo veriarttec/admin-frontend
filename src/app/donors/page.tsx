@@ -8,6 +8,13 @@ import api, { getApiErrorMessage } from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
 import { EmptyState } from '@/components/TablePrimitives';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Eye } from 'lucide-react';
 
 interface Donor {
     id: string;
@@ -116,24 +123,24 @@ export default function DonorsPage() {
     return (
         <DashboardLayout title="Donors" onRefresh={() => mutate()}>
             {/* Filters */}
-            <div className="table-card mb-6">
-                <div className="p-4">
+            <Card className="mb-6">
+                <CardContent className="p-4">
                     <div className="flex items-center gap-3 flex-wrap">
                         <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-[320px]">
-                            <input
+                            <Input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search by name or email..."
-                                className="glass-input flex-1"
+                                className="flex-1"
                             />
-                            <button type="submit" className="btn-primary">Search</button>
+                            <Button type="submit">Search</Button>
                         </form>
 
                         <select
                             value={stateFilter}
                             onChange={(e) => setStateFilter(e.target.value)}
-                            className="glass-input"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             style={{ width: 'auto', minWidth: '180px' }}
                         >
                             <option value="">All States</option>
@@ -144,169 +151,160 @@ export default function DonorsPage() {
                             ))}
                         </select>
 
-                        <button onClick={() => setShowCreateModal(true)} className="btn-primary">
+                        <Button onClick={() => setShowCreateModal(true)}>
                             + Create Donor
-                        </button>
+                        </Button>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {/* Table */}
-            <div className="table-card">
+            <Card>
                 {isLoading ? (
-                    <div className="p-12 text-center text-gray-500">Loading donors...</div>
+                    <div className="p-12 text-center text-muted-foreground">Loading donors...</div>
                 ) : (
-                    <div className="table-compact">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Bank</th>
-                                    <th>State</th>
-                                    <th>Eligibility</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data?.items.map((donor) => (
-                                    <tr key={donor.id}>
-                                        <td className="font-medium text-gray-900">
-                                            {donor.first_name && donor.last_name
-                                                ? `${donor.first_name} ${donor.last_name}`
-                                                : 'Unknown'}
-                                        </td>
-                                        <td className="text-gray-600">{donor.email || '-'}</td>
-                                        <td className="text-gray-900">{donor.bank_name || <span className="text-gray-500">No bank</span>}</td>
-                                        <td>
-                                            <StatusBadge status={donor.state} />
-                                        </td>
-                                        <td>
-                                            <StatusBadge status={donor.eligibility_status} />
-                                        </td>
-                                        <td className="text-gray-600">{new Date(donor.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            <button
-                                                onClick={() => router.push(`/donors/${donor.id}`)}
-                                                className="action-icon"
-                                                title="View Details"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {(!data?.items || data.items.length === 0) && (
-                                    <tr>
-                                        <td colSpan={7}>
-                                            <EmptyState
-                                                title="No donors found"
-                                                description="Donors appear here once they register or are created."
-                                                action={
-                                                    <button onClick={() => setShowCreateModal(true)} className="btn-primary">
-                                                        + Create Donor
-                                                    </button>
-                                                }
-                                            />
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Bank</TableHead>
+                                <TableHead>State</TableHead>
+                                <TableHead>Eligibility</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data?.items.map((donor) => (
+                                <TableRow key={donor.id}>
+                                    <TableCell className="font-medium text-foreground">
+                                        {donor.first_name && donor.last_name
+                                            ? `${donor.first_name} ${donor.last_name}`
+                                            : 'Unknown'}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{donor.email || '-'}</TableCell>
+                                    <TableCell className="text-foreground">{donor.bank_name || <span className="text-muted-foreground">No bank</span>}</TableCell>
+                                    <TableCell>
+                                        <StatusBadge status={donor.state} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <StatusBadge status={donor.eligibility_status} />
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{new Date(donor.created_at).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <button
+                                            onClick={() => router.push(`/donors/${donor.id}`)}
+                                            className="text-secondary cursor-pointer hover:bg-muted p-1 rounded"
+                                            title="View Details"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {(!data?.items || data.items.length === 0) && (
+                                <TableRow>
+                                    <TableCell colSpan={7}>
+                                        <EmptyState
+                                            title="No donors found"
+                                            description="Donors appear here once they register or are created."
+                                            action={
+                                                <Button onClick={() => setShowCreateModal(true)}>
+                                                    + Create Donor
+                                                </Button>
+                                            }
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
-            </div>
+            </Card>
 
             {/* Summary */}
-            <div className="mt-4 text-gray-600 text-sm">
+            <div className="mt-4 text-muted-foreground text-sm">
                 Showing {data?.items.length || 0} of {data?.total || 0} donors
             </div>
 
             {/* Create Donor Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowCreateModal(false)}>
-                    <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Donor</h2>
+                    <Card className="max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+                        <CardContent className="p-8">
+                            <h2 className="text-2xl font-bold text-foreground mb-6">Create New Donor</h2>
 
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label className="mb-1">First Name *</Label>
+                                        <Input
+                                            type="text"
+                                            value={newDonor.first_name}
+                                            onChange={(e) => setNewDonor({ ...newDonor, first_name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label className="mb-1">Last Name *</Label>
+                                        <Input
+                                            type="text"
+                                            value={newDonor.last_name}
+                                            onChange={(e) => setNewDonor({ ...newDonor, last_name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                                    <input
-                                        type="text"
-                                        value={newDonor.first_name}
-                                        onChange={(e) => setNewDonor({ ...newDonor, first_name: e.target.value })}
-                                        className="glass-input w-full"
-                                        required
+                                    <Label className="mb-1">Email</Label>
+                                    <Input
+                                        type="email"
+                                        value={newDonor.email}
+                                        onChange={(e) => setNewDonor({ ...newDonor, email: e.target.value })}
+                                        placeholder="Optional - will generate temporary password if provided"
                                     />
                                 </div>
+
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                                    <input
-                                        type="text"
-                                        value={newDonor.last_name}
-                                        onChange={(e) => setNewDonor({ ...newDonor, last_name: e.target.value })}
-                                        className="glass-input w-full"
-                                        required
+                                    <Label className="mb-1">Phone</Label>
+                                    <Input
+                                        type="tel"
+                                        value={newDonor.phone}
+                                        onChange={(e) => setNewDonor({ ...newDonor, phone: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label className="mb-1">Address</Label>
+                                    <Textarea
+                                        value={newDonor.address}
+                                        onChange={(e) => setNewDonor({ ...newDonor, address: e.target.value })}
+                                        rows={2}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label className="mb-1">Date of Birth</Label>
+                                    <Input
+                                        type="date"
+                                        value={newDonor.date_of_birth}
+                                        onChange={(e) => setNewDonor({ ...newDonor, date_of_birth: e.target.value })}
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    value={newDonor.email}
-                                    onChange={(e) => setNewDonor({ ...newDonor, email: e.target.value })}
-                                    className="glass-input w-full"
-                                    placeholder="Optional - will generate temporary password if provided"
-                                />
+                            <div className="flex gap-3 mt-6">
+                                <Button onClick={handleCreateDonor} className="flex-1">
+                                    Create Donor
+                                </Button>
+                                <Button variant="secondary" onClick={() => setShowCreateModal(false)} className="flex-1">
+                                    Cancel
+                                </Button>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                <input
-                                    type="tel"
-                                    value={newDonor.phone}
-                                    onChange={(e) => setNewDonor({ ...newDonor, phone: e.target.value })}
-                                    className="glass-input w-full"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                                <textarea
-                                    value={newDonor.address}
-                                    onChange={(e) => setNewDonor({ ...newDonor, address: e.target.value })}
-                                    className="glass-input w-full"
-                                    rows={2}
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                                <input
-                                    type="date"
-                                    value={newDonor.date_of_birth}
-                                    onChange={(e) => setNewDonor({ ...newDonor, date_of_birth: e.target.value })}
-                                    className="glass-input w-full"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button onClick={handleCreateDonor} className="btn-primary flex-1">
-                                Create Donor
-                            </button>
-                            <button onClick={() => setShowCreateModal(false)} className="btn-secondary flex-1">
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             )}
         </DashboardLayout>

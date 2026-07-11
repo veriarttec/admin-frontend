@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import useSWR from 'swr';
 import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Building2, CheckCircle, Users, Clock } from 'lucide-react';
 
 interface DashboardStats {
     total_banks: number;
@@ -59,123 +62,107 @@ export default function DashboardPage() {
     return (
         <DashboardLayout title="Dashboard">
             {isLoading && (
-                <div className="text-center py-8 text-gray-500">Loading dashboard...</div>
+                <div className="text-center py-8 text-muted-foreground">Loading dashboard...</div>
             )}
             {error && !error.message?.includes('401') && (
                 <div className="text-center py-8 text-red-500">{error.message || 'Failed to load dashboard'}</div>
             )}
             {!isLoading && !error && (
-                <div className="dashboard-container">
+                <div className="max-w-[1200px] mx-auto space-y-4">
                     {/* Stats Grid */}
-                    <div className="stats-grid">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <StatCard
                             title="Total Banks"
                             value={stats?.total_banks || 0}
                             subtitle={`${stats?.verified_banks || 0} verified`}
-                            icon={
-                                <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            }
+                            icon={<Building2 className="w-8 h-8 text-blue-500" />}
                         />
                         <StatCard
                             title="Subscribed Banks"
                             value={stats?.subscribed_banks || 0}
                             subtitle={`${stats?.expiring_subscriptions || 0} expiring soon`}
-                            icon={
-                                <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            }
+                            icon={<CheckCircle className="w-8 h-8 text-green-500" />}
                         />
                         <StatCard
                             title="Total Donors"
                             value={stats?.total_donors || 0}
                             subtitle={`${stats?.onboarded_donors || 0} onboarded`}
-                            icon={
-                                <svg className="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                            }
+                            icon={<Users className="w-8 h-8 text-purple-500" />}
                         />
                         <StatCard
                             title="Pending Actions"
                             value={stats?.pending_verifications || 0}
                             subtitle="verifications pending"
-                            icon={
-                                <svg className="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            }
+                            icon={<Clock className="w-8 h-8 text-orange-500" />}
                         />
                     </div>
 
-                    <div className="panels-grid">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         {/* Subscription Breakdown */}
-                        <div className="table-card">
-                            <div className="table-card-header">
-                                <h2>Subscription Tiers</h2>
-                            </div>
-                            <div className="table-compact">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Tier</th>
-                                            <th>Banks</th>
-                                            <th className="text-right">Revenue (/mo)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Subscription Tiers</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Tier</TableHead>
+                                            <TableHead>Banks</TableHead>
+                                            <TableHead className="text-right">Revenue (/mo)</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {data?.subscription_breakdown.map((tier) => (
-                                            <tr key={tier.tier}>
-                                                <td className="font-medium text-gray-900">{tier.tier}</td>
-                                                <td className="text-gray-700">{tier.count} {tier.count === 1 ? 'bank' : 'banks'}</td>
-                                                <td className="text-right">
-                                                    <span className="amount-positive">${tier.revenue_estimate.toLocaleString()}</span>
-                                                </td>
-                                            </tr>
+                                            <TableRow key={tier.tier}>
+                                                <TableCell className="font-medium text-foreground">{tier.tier}</TableCell>
+                                                <TableCell className="text-foreground">{tier.count} {tier.count === 1 ? 'bank' : 'banks'}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <span className="text-green-600 font-semibold">${tier.revenue_estimate.toLocaleString()}</span>
+                                                </TableCell>
+                                            </TableRow>
                                         ))}
                                         {(!data?.subscription_breakdown || data.subscription_breakdown.length === 0) && (
-                                            <tr>
-                                                <td colSpan={3} className="text-center text-gray-500">No active subscriptions</td>
-                                            </tr>
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-center text-muted-foreground">No active subscriptions</TableCell>
+                                            </TableRow>
                                         )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
 
                         {/* Recent Activity */}
-                        <div className="table-card">
-                            <div className="table-card-header">
-                                <h2>Recent Activity</h2>
-                            </div>
-                            <div className="table-compact">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Admin</th>
-                                            <th>Action</th>
-                                            <th className="text-right">When</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Recent Activity</CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Admin</TableHead>
+                                            <TableHead>Action</TableHead>
+                                            <TableHead className="text-right">When</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
                                         {data?.recent_activity.slice(0, 8).map((log) => (
-                                            <tr key={log.id}>
-                                                <td className="font-medium text-gray-900">{log.admin_name || 'System'}</td>
-                                                <td className="text-gray-700" style={{ textTransform: 'capitalize' }}>{log.action.replace('_', ' ')}</td>
-                                                <td className="text-right text-gray-700 text-sm">{new Date(log.created_at).toLocaleString()}</td>
-                                            </tr>
+                                            <TableRow key={log.id}>
+                                                <TableCell className="font-medium text-foreground">{log.admin_name || 'System'}</TableCell>
+                                                <TableCell className="text-foreground capitalize">{log.action.replace('_', ' ')}</TableCell>
+                                                <TableCell className="text-right text-foreground text-sm">{new Date(log.created_at).toLocaleString()}</TableCell>
+                                            </TableRow>
                                         ))}
                                         {(!data?.recent_activity || data.recent_activity.length === 0) && (
-                                            <tr>
-                                                <td colSpan={3} className="text-center text-gray-500">No recent activity</td>
-                                            </tr>
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="text-center text-muted-foreground">No recent activity</TableCell>
+                                            </TableRow>
                                         )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                    </TableBody>
+                                </Table>
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
             )}
@@ -190,13 +177,15 @@ function StatCard({ title, value, subtitle, icon }: {
     icon: React.ReactNode;
 }) {
     return (
-        <div className="stat-card h-full">
-            <div className="flex items-start justify-between mb-4">
-                <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</div>
-                <div className="flex-shrink-0">{icon}</div>
-            </div>
-            <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
-            <div className="text-sm text-gray-500">{subtitle}</div>
-        </div>
+        <Card className="h-full">
+            <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                    <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">{title}</div>
+                    <div className="flex-shrink-0">{icon}</div>
+                </div>
+                <div className="text-3xl font-bold text-foreground mb-2">{value}</div>
+                <div className="text-sm text-muted-foreground">{subtitle}</div>
+            </CardContent>
+        </Card>
     );
 }

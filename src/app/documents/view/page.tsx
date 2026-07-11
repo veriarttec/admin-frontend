@@ -48,28 +48,24 @@ function ViewerContent() {
     }, [fetchSignedUrl]);
 
     return (
-        <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FAFEFF' }}>
-            <header
-                className="px-4 sm:px-6 py-3 flex items-center justify-between gap-4 bg-white"
-                style={{ borderBottom: '1px solid var(--border-color)' }}
-            >
+        <div className="min-h-screen flex flex-col bg-background">
+            <header className="px-4 sm:px-6 py-3 flex items-center justify-between gap-4 bg-card border-b border-border">
                 <div className="flex items-center gap-3 min-w-0">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-1.5 text-sm font-medium transition-colors"
-                        style={{ color: 'var(--text-primary)' }}
+                        className="flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-secondary transition-colors"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                         Back
                     </button>
-                    <span style={{ color: 'var(--border-color)' }}>|</span>
-                    <h1 className="text-sm font-semibold truncate" style={{ color: 'var(--sidebar-active)' }}>
+                    <span className="text-border">|</span>
+                    <h1 className="text-sm font-semibold truncate text-primary">
                         {docName}
                     </h1>
                 </div>
-                <p className="text-xs shrink-0 hidden sm:block" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-xs shrink-0 hidden sm:block text-muted-foreground">
                     Secure link · expires in 1 hour
                 </p>
             </header>
@@ -77,15 +73,18 @@ function ViewerContent() {
             <main className="flex-1 flex items-center justify-center p-4">
                 {loading && (
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--accent)' }}></div>
-                        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Opening document...</p>
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-secondary mx-auto mb-4"></div>
+                        <p className="text-sm text-muted-foreground">Opening document...</p>
                     </div>
                 )}
                 {!loading && error && (
                     <div className="text-center max-w-sm">
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Couldn&apos;t open document</p>
-                        <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>{error}</p>
-                        <button onClick={fetchSignedUrl} className="btn-primary mt-4">
+                        <p className="text-sm font-medium text-foreground">Couldn&apos;t open document</p>
+                        <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+                        <button
+                            onClick={fetchSignedUrl}
+                            className="mt-4 px-4 py-2 rounded-lg bg-secondary text-white text-sm font-medium hover:bg-secondary-dark transition-colors"
+                        >
                             Try again
                         </button>
                     </div>
@@ -109,7 +108,7 @@ function ViewerContent() {
 
 export default function DocumentViewPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen" style={{ backgroundColor: '#FAFEFF' }} />}>
+        <Suspense fallback={<div className="min-h-screen bg-background" />}>
             <ViewerContent />
         </Suspense>
     );

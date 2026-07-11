@@ -8,6 +8,10 @@ import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface PendingDocument {
     type: string;
@@ -214,95 +218,71 @@ export default function DocumentsPage() {
     return (
         <DashboardLayout title="Documents Review">
             {/* Tab Navigation */}
-            <div className="table-card mb-6">
-                <div className="flex border-b">
-                    <button
-                        onClick={() => setActiveTab('banks')}
-                        className={`px-6 py-3 font-medium ${
-                            activeTab === 'banks'
-                                ? 'border-b-2 border-blue-500 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        🏦 Banks
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('donors')}
-                        className={`px-6 py-3 font-medium ${
-                            activeTab === 'donors'
-                                ? 'border-b-2 border-blue-500 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900'
-                        }`}
-                    >
-                        👤 Donors
-                    </button>
-                </div>
-            </div>
+            <Card className="mb-6">
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+                    <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
+                        <TabsTrigger value="banks" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none">
+                            {'🏦'} Banks
+                        </TabsTrigger>
+                        <TabsTrigger value="donors" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none">
+                            {'👤'} Donors
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </Card>
 
             {/* Filter Bar */}
-            <div className="table-card mb-6">
-                <div className="p-4">
+            <Card className="mb-6">
+                <CardContent className="py-4">
                     <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-sm font-medium text-gray-700">Filter by type:</span>
+                        <span className="text-sm font-medium text-foreground">Filter by type:</span>
                         <div className="flex gap-2">
-                            <button
+                            <Button
+                                variant={filter === 'all' ? 'default' : 'secondary'}
+                                size="sm"
                                 onClick={() => setFilter('all')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                    filter === 'all'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
                             >
                                 All ({filteredDocuments.length})
-                            </button>
+                            </Button>
                             {activeTab === 'banks' && (
-                                <button
+                                <Button
+                                    variant={filter === 'certification' ? 'default' : 'secondary'}
+                                    size="sm"
                                     onClick={() => setFilter('certification')}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                        filter === 'certification'
-                                            ? 'bg-blue-500 text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                    }`}
                                 >
                                     Certifications
-                                </button>
+                                </Button>
                             )}
                             {activeTab === 'donors' && (
                                 <>
-                                    <button
+                                    <Button
+                                        variant={filter === 'consent' ? 'default' : 'secondary'}
+                                        size="sm"
                                         onClick={() => setFilter('consent')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                            filter === 'consent'
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
                                     >
                                         Consents
-                                    </button>
-                                    <button
+                                    </Button>
+                                    <Button
+                                        variant={filter === 'test_report' ? 'default' : 'secondary'}
+                                        size="sm"
                                         onClick={() => setFilter('test_report')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                                            filter === 'test_report'
-                                                ? 'bg-blue-500 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                        }`}
                                     >
                                         Test Reports
-                                    </button>
+                                    </Button>
                                 </>
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {/* Documents Display */}
             {filteredDocuments.length === 0 ? (
-                <div className="table-card p-12 text-center">
-                    <div className="text-6xl mb-4">✅</div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">All caught up!</h3>
-                    <p className="text-gray-600">No pending documents to review in this section.</p>
-                </div>
+                <Card className="p-12 text-center">
+                    <div className="text-6xl mb-4">{'✅'}</div>
+                    <h3 className="text-xl font-semibold text-foreground mb-2">All caught up!</h3>
+                    <p className="text-muted-foreground">No pending documents to review in this section.</p>
+                </Card>
             ) : (
                 <div className="grid grid-cols-1 gap-4">
                     {Object.entries(groupedDocs).map(([key, docs]) => {
@@ -310,47 +290,47 @@ export default function DocumentsPage() {
                         const pendingDocs = docs.filter(d => !d.status || d.status === 'pending');
 
                         return (
-                            <div key={key} className="table-card">
-                                <div className="p-6">
+                            <Card key={key}>
+                                <CardContent className="pt-6">
                                     <div className="flex items-start justify-between gap-4 mb-4">
                                         <div className="flex items-start gap-4 flex-1">
                                             <div className="text-4xl">{getDocumentIcon(firstDoc.type)}</div>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <span className={`px-3 py-1 rounded text-xs font-medium ${
-                                                        firstDoc.type === 'certification' ? 'bg-blue-100 text-blue-800' :
-                                                        firstDoc.type === 'consent' ? 'bg-purple-100 text-purple-800' :
-                                                        'bg-green-100 text-green-800'
-                                                    }`}>
+                                                    <Badge className={
+                                                        firstDoc.type === 'certification' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' :
+                                                        firstDoc.type === 'consent' ? 'bg-purple-100 text-purple-800 hover:bg-purple-100' :
+                                                        'bg-green-100 text-green-800 hover:bg-green-100'
+                                                    }>
                                                         {firstDoc.type.replace('_', ' ').toUpperCase()}
-                                                    </span>
-                                                    <span className="text-xs bg-gray-200 text-gray-700 px-3 py-1 rounded-full font-medium">
+                                                    </Badge>
+                                                    <Badge variant="secondary" className="rounded-full">
                                                         {docs.length} {firstDoc.type === 'test_report' ? 'report' : 'document'}{docs.length !== 1 ? 's' : ''}
-                                                    </span>
+                                                    </Badge>
                                                 </div>
 
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                                                <h3 className="text-lg font-semibold text-foreground mb-3">
                                                     {firstDoc.entity_name}
                                                 </h3>
 
                                                 {/* List documents */}
                                                 <div className="space-y-2">
                                                     {docs.map((doc, idx) => (
-                                                        <div key={idx} className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                                        <div key={idx} className="flex items-start justify-between p-3 bg-muted rounded-lg border border-border">
                                                             <div className="flex-1">
                                                                 {doc.type === 'test_report' && (
                                                                     <>
                                                                         <div className="flex items-center gap-2 mb-1">
-                                                                            <p className="text-sm font-medium text-gray-900">
+                                                                            <p className="text-sm font-medium text-foreground">
                                                                                 {doc.test_name || doc.test_type || 'Test Report'}
                                                                             </p>
                                                                             <StatusBadge status={doc.status} />
                                                                         </div>
-                                                                        <p className="text-xs text-gray-500">
+                                                                        <p className="text-xs text-muted-foreground">
                                                                             Uploaded: {doc.uploaded_at ? formatDate(doc.uploaded_at) : 'N/A'}
                                                                         </p>
                                                                         {doc.reviewed_at && (
-                                                                            <p className="text-xs text-gray-500">
+                                                                            <p className="text-xs text-muted-foreground">
                                                                                 Reviewed: {formatDate(doc.reviewed_at)} by {doc.reviewed_by || 'Admin'}
                                                                             </p>
                                                                         )}
@@ -359,20 +339,20 @@ export default function DocumentsPage() {
                                                                 {doc.type === 'consent' && (
                                                                     <>
                                                                         <div className="flex items-center gap-2 mb-1">
-                                                                            <p className="text-sm font-medium text-gray-900">Consent Form</p>
+                                                                            <p className="text-sm font-medium text-foreground">Consent Form</p>
                                                                             <StatusBadge status={doc.status} />
                                                                         </div>
-                                                                        <p className="text-xs text-gray-500">
+                                                                        <p className="text-xs text-muted-foreground">
                                                                             Signed: {doc.signed_at ? formatDate(doc.signed_at) : 'N/A'}
                                                                         </p>
                                                                     </>
                                                                 )}
                                                                 {doc.type === 'certification' && doc.document && (
                                                                     <>
-                                                                        <p className="text-sm font-medium text-gray-900">
+                                                                        <p className="text-sm font-medium text-foreground">
                                                                             {doc.document.filename || 'Certification'}
                                                                         </p>
-                                                                        <p className="text-xs text-gray-500">
+                                                                        <p className="text-xs text-muted-foreground">
                                                                             Uploaded: {formatDate(doc.document.uploaded_at)}
                                                                         </p>
                                                                     </>
@@ -381,37 +361,41 @@ export default function DocumentsPage() {
 
                                                             <div className="flex gap-2 ml-4">
                                                                 {doc.file_url && (
-                                                                    <button
+                                                                    <Button
+                                                                        variant="secondary"
+                                                                        size="sm"
                                                                         onClick={() => viewDocument(doc.file_url!)}
-                                                                        className="px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
                                                                     >
                                                                         View
-                                                                    </button>
+                                                                    </Button>
                                                                 )}
                                                                 {doc.document?.url && (
-                                                                    <button
+                                                                    <Button
+                                                                        variant="secondary"
+                                                                        size="sm"
                                                                         onClick={() => viewDocument(doc.document.url)}
-                                                                        className="px-3 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded"
                                                                     >
                                                                         View
-                                                                    </button>
+                                                                    </Button>
                                                                 )}
                                                                 {(!doc.status || doc.status === 'pending') && (
                                                                     <>
-                                                                        <button
+                                                                        <Button
+                                                                            size="sm"
+                                                                            className="bg-green-600 hover:bg-green-700 text-white"
                                                                             onClick={() => handleVerifyDocument(doc)}
-                                                                            className="px-3 py-1 text-xs bg-green-500 hover:bg-green-600 text-white rounded"
                                                                             title="Approve"
                                                                         >
-                                                                            ✓ Approve
-                                                                        </button>
-                                                                        <button
+                                                                            {'✓'} Approve
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="sm"
                                                                             onClick={() => handleRejectDocument(doc)}
-                                                                            className="px-3 py-1 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
                                                                             title="Reject"
                                                                         >
-                                                                            ✗ Reject
-                                                                        </button>
+                                                                            {'✗'} Reject
+                                                                        </Button>
                                                                     </>
                                                                 )}
                                                             </div>
@@ -422,35 +406,37 @@ export default function DocumentsPage() {
                                         </div>
 
                                         <div className="flex flex-col gap-2 min-w-[200px]">
-                                            <button
+                                            <Button
+                                                variant="secondary"
+                                                className="w-full"
                                                 onClick={() => viewEntity(firstDoc.entity_type, firstDoc.entity_id)}
-                                                className="btn-secondary w-full"
                                             >
                                                 View {firstDoc.entity_type === 'bank' ? 'Bank' : 'Donor'}
-                                            </button>
+                                            </Button>
 
                                             {pendingDocs.length > 1 && (
                                                 <div className="flex gap-2">
-                                                    <button
+                                                    <Button
+                                                        className="flex-1"
                                                         onClick={() => handleApproveAll(firstDoc.entity_id, pendingDocs)}
-                                                        className="btn-primary flex-1"
                                                         title="Approve All Pending"
                                                     >
-                                                        ✓ Approve All
-                                                    </button>
-                                                    <button
+                                                        {'✓'} Approve All
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        className="flex-1"
                                                         onClick={() => handleRejectAll(firstDoc.entity_id, pendingDocs)}
-                                                        className="btn-danger flex-1"
                                                         title="Reject All Pending"
                                                     >
-                                                        ✗ Reject All
-                                                    </button>
+                                                        {'✗'} Reject All
+                                                    </Button>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         );
                     })}
                 </div>

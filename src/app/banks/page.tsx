@@ -7,6 +7,12 @@ import api from '@/lib/api';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
 import { Pagination } from '@/components/TablePrimitives';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Eye } from 'lucide-react';
 
 interface Bank {
     id: string;
@@ -66,33 +72,33 @@ export default function BanksPage() {
 
 
     const getSubscriptionStatus = (bank: Bank) => {
-        if (!bank.is_subscribed) return <span className="badge badge-warning">Not Subscribed</span>;
+        if (!bank.is_subscribed) return <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">Not Subscribed</Badge>;
         if (bank.subscription_expires_at) {
             const expiry = new Date(bank.subscription_expires_at);
             const now = new Date();
             const daysUntilExpiry = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-            if (daysUntilExpiry < 0) return <span className="badge badge-danger">Expired</span>;
-            if (daysUntilExpiry <= 30) return <span className="badge badge-warning">Expiring in {daysUntilExpiry}d</span>;
+            if (daysUntilExpiry < 0) return <Badge variant="destructive">Expired</Badge>;
+            if (daysUntilExpiry <= 30) return <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">Expiring in {daysUntilExpiry}d</Badge>;
         }
-        return <span className="badge badge-success">{bank.subscription_tier}</span>;
+        return <Badge className="bg-green-600 text-white">{bank.subscription_tier}</Badge>;
     };
 
     return (
         <DashboardLayout title="Banks" onRefresh={() => mutate()}>
             {/* Filters */}
-            <div className="table-card mb-6">
-                <div className="p-4">
+            <Card className="mb-6">
+                <CardContent className="p-4">
                     <div className="flex items-center gap-3 flex-wrap">
                         <form onSubmit={handleSearch} className="flex gap-2 flex-1 min-w-[320px]">
-                            <input
+                            <Input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search banks by name or email..."
-                                className="glass-input flex-1"
+                                className="flex-1"
                             />
-                            <button type="submit" className="btn-primary">Search</button>
+                            <Button type="submit">Search</Button>
                         </form>
 
                         <select
@@ -101,7 +107,7 @@ export default function BanksPage() {
                                 setFilter(e.target.value as typeof filter);
                                 setPage(1);
                             }}
-                            className="glass-input"
+                            className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                             style={{ width: 'auto', minWidth: '180px' }}
                         >
                             <option value="all">All</option>
@@ -110,70 +116,67 @@ export default function BanksPage() {
                             <option value="subscribed">Subscribed</option>
                         </select>
                     </div>
-                </div>
-            </div>
+                </CardContent>
+            </Card>
 
             {/* Table */}
-            <div className="table-card">
+            <Card>
                 {isLoading ? (
-                    <div className="p-12 text-center text-gray-500">Loading banks...</div>
+                    <div className="p-12 text-center text-muted-foreground">Loading banks...</div>
                 ) : (
-                    <div className="table-compact">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Bank Name</th>
-                                    <th>Email</th>
-                                    <th>State</th>
-                                    <th>Availability</th>
-                                    <th>Subscription</th>
-                                    <th>Donors</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {data?.items.map((bank) => (
-                                    <tr key={bank.id}>
-                                        <td className="font-medium text-gray-900">{bank.name}</td>
-                                        <td className="text-gray-600">{bank.email}</td>
-                                        <td>
-                                            <StatusBadge status={bank.state} />
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${bank.is_active ? 'badge-success' : 'badge-danger'}`}>
-                                                {bank.is_active ? 'Online' : 'Offline'}
-                                            </span>
-                                        </td>
-                                        <td>{getSubscriptionStatus(bank)}</td>
-                                        <td className="text-gray-900 font-medium">{bank.donor_count}</td>
-                                        <td className="text-gray-600">{new Date(bank.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            <button
-                                                onClick={() => router.push(`/banks/${bank.id}`)}
-                                                className="action-icon"
-                                                title="View Details"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {(!data?.items || data.items.length === 0) && (
-                                    <tr>
-                                        <td colSpan={8} className="text-center text-gray-500 py-12">
-                                            No banks found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Bank Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>State</TableHead>
+                                <TableHead>Availability</TableHead>
+                                <TableHead>Subscription</TableHead>
+                                <TableHead>Donors</TableHead>
+                                <TableHead>Created</TableHead>
+                                <TableHead>Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data?.items.map((bank) => (
+                                <TableRow key={bank.id}>
+                                    <TableCell className="font-medium text-foreground">{bank.name}</TableCell>
+                                    <TableCell className="text-muted-foreground">{bank.email}</TableCell>
+                                    <TableCell>
+                                        <StatusBadge status={bank.state} />
+                                    </TableCell>
+                                    <TableCell>
+                                        {bank.is_active ? (
+                                            <Badge className="bg-green-600 text-white">Online</Badge>
+                                        ) : (
+                                            <Badge variant="destructive">Offline</Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>{getSubscriptionStatus(bank)}</TableCell>
+                                    <TableCell className="text-foreground font-medium">{bank.donor_count}</TableCell>
+                                    <TableCell className="text-muted-foreground">{new Date(bank.created_at).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                        <button
+                                            onClick={() => router.push(`/banks/${bank.id}`)}
+                                            className="text-secondary cursor-pointer hover:bg-muted p-1 rounded"
+                                            title="View Details"
+                                        >
+                                            <Eye className="w-5 h-5" />
+                                        </button>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {(!data?.items || data.items.length === 0) && (
+                                <TableRow>
+                                    <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
+                                        No banks found
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 )}
-            </div>
+            </Card>
 
             {/* Pagination */}
             <Pagination

@@ -8,6 +8,10 @@ import {
     useState,
     ReactNode,
 } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 interface ConfirmOptions {
     title: string;
@@ -15,7 +19,6 @@ interface ConfirmOptions {
     confirmLabel?: string;
     cancelLabel?: string;
     destructive?: boolean;
-    /** When set, the dialog shows a text input and resolves with its value (or null on cancel). */
     input?: {
         label: string;
         placeholder?: string;
@@ -74,26 +77,23 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                             className="fixed inset-0 bg-black/30 transition-all"
                             onClick={handleCancel}
                         ></div>
-                        <div
-                            className="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6"
-                            style={{ border: '1px solid var(--card-border)' }}
-                        >
-                            <h3 className="text-lg font-semibold" style={{ color: 'var(--sidebar-active)' }}>
+                        <div className="relative bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-border">
+                            <h3 className="text-lg font-semibold text-primary">
                                 {options.title}
                             </h3>
                             {options.description && (
-                                <p className="mt-2 text-sm" style={{ color: 'var(--text-primary)' }}>
+                                <p className="mt-2 text-sm text-foreground">
                                     {options.description}
                                 </p>
                             )}
                             {options.input && (
                                 <div className="mt-4">
-                                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                                    <Label className="mb-1">
                                         {options.input.label}
-                                        {options.input.required && <span style={{ color: 'var(--danger)' }}> *</span>}
-                                    </label>
+                                        {options.input.required && <span className="text-destructive"> *</span>}
+                                    </Label>
                                     {options.input.multiline ? (
-                                        <textarea
+                                        <Textarea
                                             autoFocus
                                             rows={3}
                                             value={inputValue}
@@ -102,11 +102,10 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                                                 setInputError(false);
                                             }}
                                             placeholder={options.input.placeholder}
-                                            className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                                            style={{ borderColor: inputError ? 'var(--danger)' : 'var(--border-color)' }}
+                                            className={inputError ? 'border-destructive' : ''}
                                         />
                                     ) : (
-                                        <input
+                                        <Input
                                             autoFocus
                                             type="text"
                                             value={inputValue}
@@ -116,27 +115,26 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
                                             }}
                                             onKeyDown={(e) => e.key === 'Enter' && handleConfirm()}
                                             placeholder={options.input.placeholder}
-                                            className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-                                            style={{ borderColor: inputError ? 'var(--danger)' : 'var(--border-color)' }}
+                                            className={inputError ? 'border-destructive' : ''}
                                         />
                                     )}
                                     {inputError && (
-                                        <p className="mt-1 text-xs" style={{ color: 'var(--danger)' }}>
+                                        <p className="mt-1 text-xs text-destructive">
                                             This field is required
                                         </p>
                                     )}
                                 </div>
                             )}
                             <div className="mt-6 flex justify-end gap-3">
-                                <button onClick={handleCancel} className="btn-outline">
+                                <Button variant="outline" onClick={handleCancel}>
                                     {options.cancelLabel || 'Cancel'}
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant={options.destructive ? 'destructive' : 'default'}
                                     onClick={handleConfirm}
-                                    className={options.destructive ? 'btn-danger' : 'btn-primary'}
                                 >
                                     {options.confirmLabel || 'Confirm'}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -146,15 +144,6 @@ export function ConfirmDialogProvider({ children }: { children: ReactNode }) {
     );
 }
 
-/**
- * Promise-based confirmation dialog (replaces window.confirm / window.prompt).
- *
- * const confirm = useConfirm();
- * if (!(await confirm({ title: 'Delete bank?', destructive: true }))) return;
- *
- * const reason = await confirm({ title: 'Reject document', input: { label: 'Rejection reason', required: true } });
- * if (reason === null) return; // cancelled
- */
 export function useConfirm() {
     const confirm = useContext(ConfirmContext);
     if (!confirm) throw new Error('useConfirm must be used within ConfirmDialogProvider');

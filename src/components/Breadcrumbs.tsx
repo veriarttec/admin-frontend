@@ -28,7 +28,7 @@ export default function Breadcrumbs() {
 
     return (
         <nav aria-label="Breadcrumb" className="mb-4">
-            <ol className="flex items-center gap-1.5 text-sm flex-wrap" style={{ color: 'var(--text-muted)' }}>
+            <ol className="flex items-center gap-1.5 text-sm flex-wrap text-muted-foreground">
                 <li>
                     <Link href="/dashboard" className="hover:underline">
                         Dashboard
@@ -39,9 +39,9 @@ export default function Breadcrumbs() {
                     const isLast = i === segments.length - 1;
                     return (
                         <li key={href} className="flex items-center gap-1.5">
-                            <span style={{ color: 'var(--border-color)' }}>/</span>
+                            <span className="text-border">/</span>
                             {isLast ? (
-                                <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                                <span className="font-medium text-foreground">
                                     {labelFor(segment)}
                                 </span>
                             ) : (

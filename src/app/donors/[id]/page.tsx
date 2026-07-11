@@ -2,12 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import useSWR from 'swr';
 import api, { getApiErrorMessage } from '@/lib/api';
 import { useConfirm } from '@/components/ConfirmDialog';
 import DashboardLayout from '@/components/DashboardLayout';
 import StatusBadge from '@/components/StatusBadge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft, Pencil, Trash2, FileText, Eye } from 'lucide-react';
 
 interface StateHistoryItem {
     id: string;
@@ -424,7 +433,7 @@ export default function DonorDetailPage() {
         return (
             <DashboardLayout>
                 <div className="flex items-center justify-center min-h-screen">
-                    <div className="text-xl text-gray-600">Loading donor details...</div>
+                    <div className="text-xl text-muted-foreground">Loading donor details...</div>
                 </div>
             </DashboardLayout>
         );
@@ -471,11 +480,11 @@ export default function DonorDetailPage() {
                                 )}
                             </button>
                             <div>
-                                <button onClick={() => router.push('/donors')} className="text-blue-600 hover:text-blue-700 mb-2 text-sm">
-                                    ← Back to Donors
-                                </button>
-                                <h1 className="text-3xl font-bold text-gray-900">{fullName}</h1>
-                                <p className="text-gray-600 mt-1">{donor.email || 'No email'}</p>
+                                <Link href="/donors" className="text-secondary hover:text-secondary/80 mb-2 text-sm inline-flex items-center gap-1">
+                                    <ArrowLeft className="w-3 h-3" /> Back to Donors
+                                </Link>
+                                <h1 className="text-3xl font-bold text-foreground">{fullName}</h1>
+                                <p className="text-muted-foreground mt-1">{donor.email || 'No email'}</p>
                             </div>
                         </div>
                         <div className="flex gap-3 items-start">
@@ -485,12 +494,12 @@ export default function DonorDetailPage() {
                             </div>
                             {!editMode && (
                                 <div className="flex gap-2">
-                                    <button onClick={handleEdit} className="btn-primary">
-                                        Edit Info
-                                    </button>
-                                    <button onClick={handleDelete} className="btn-danger">
-                                        Delete
-                                    </button>
+                                    <Button onClick={handleEdit}>
+                                        <Pencil className="w-4 h-4 mr-1" /> Edit Info
+                                    </Button>
+                                    <Button variant="destructive" onClick={handleDelete}>
+                                        <Trash2 className="w-4 h-4 mr-1" /> Delete
+                                    </Button>
                                 </div>
                             )}
                         </div>
@@ -500,178 +509,173 @@ export default function DonorDetailPage() {
                         {/* Left Column - Personal Info */}
                         <div className="lg:col-span-2 space-y-6">
                             {/* Personal Information Card */}
-                            <div className="table-card">
-                                <div className="p-6">
+                            <Card>
+                                <CardContent className="pt-6">
                                     <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+                                        <h2 className="text-xl font-semibold text-foreground">Personal Information</h2>
                                         {editMode && (
                                             <div className="flex gap-2">
-                                                <button onClick={handleSaveEdit} className="btn-primary">Save</button>
-                                                <button onClick={handleCancelEdit} className="btn-secondary">Cancel</button>
+                                                <Button onClick={handleSaveEdit}>Save</Button>
+                                                <Button variant="secondary" onClick={handleCancelEdit}>Cancel</Button>
                                             </div>
                                         )}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                            <Label className="mb-1">First Name</Label>
                                             {editMode ? (
-                                                <input
+                                                <Input
                                                     type="text"
                                                     value={editData.first_name}
                                                     onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
-                                                    className="glass-input w-full"
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">{donor.first_name || 'N/A'}</p>
+                                                <p className="text-foreground">{donor.first_name || 'N/A'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                            <Label className="mb-1">Last Name</Label>
                                             {editMode ? (
-                                                <input
+                                                <Input
                                                     type="text"
                                                     value={editData.last_name}
                                                     onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
-                                                    className="glass-input w-full"
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">{donor.last_name || 'N/A'}</p>
+                                                <p className="text-foreground">{donor.last_name || 'N/A'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                            <Label className="mb-1">Email</Label>
                                             {editMode ? (
-                                                <input
+                                                <Input
                                                     type="email"
                                                     value={editData.email}
                                                     onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                                                    className="glass-input w-full"
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">{donor.email || 'N/A'}</p>
+                                                <p className="text-foreground">{donor.email || 'N/A'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                            <Label className="mb-1">Phone</Label>
                                             {editMode ? (
-                                                <input
+                                                <Input
                                                     type="tel"
                                                     value={editData.phone}
                                                     onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
-                                                    className="glass-input w-full"
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">{donor.phone || 'N/A'}</p>
+                                                <p className="text-foreground">{donor.phone || 'N/A'}</p>
                                             )}
                                         </div>
                                         <div className="col-span-2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                            <Label className="mb-1">Address</Label>
                                             {editMode ? (
-                                                <textarea
+                                                <Textarea
                                                     value={editData.address}
                                                     onChange={(e) => setEditData({ ...editData, address: e.target.value })}
-                                                    className="glass-input w-full"
                                                     rows={2}
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">{donor.address || 'N/A'}</p>
+                                                <p className="text-foreground">{donor.address || 'N/A'}</p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                                            <Label className="mb-1">Date of Birth</Label>
                                             {editMode ? (
-                                                <input
+                                                <Input
                                                     type="date"
                                                     value={editData.date_of_birth}
                                                     onChange={(e) => setEditData({ ...editData, date_of_birth: e.target.value })}
-                                                    className="glass-input w-full"
                                                 />
                                             ) : (
-                                                <p className="text-gray-900">
+                                                <p className="text-foreground">
                                                     {donor.date_of_birth ? new Date(donor.date_of_birth).toLocaleDateString() : 'N/A'}
                                                 </p>
                                             )}
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Bank</label>
-                                            <p className="text-gray-900">{donor.bank_name || 'No bank selected'}</p>
+                                            <Label className="mb-1">Bank</Label>
+                                            <p className="text-foreground">{donor.bank_name || 'No bank selected'}</p>
                                         </div>
                                     </div>
 
                                     {/* Physical Characteristics */}
                                     {(donor.donor_type || donor.height_cm || donor.blood_group) && (
-                                        <div className="mt-6 pt-6 border-t border-gray-200">
-                                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Physical Characteristics</h3>
+                                        <>
+                                            <Separator className="my-6" />
+                                            <h3 className="text-lg font-semibold text-foreground mb-4">Physical Characteristics</h3>
                                             <div className="grid grid-cols-3 gap-4">
                                                 {donor.donor_type && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Donor Type</label>
-                                                        <p className="text-gray-900">{donor.donor_type}</p>
+                                                        <Label className="mb-1">Donor Type</Label>
+                                                        <p className="text-foreground">{donor.donor_type}</p>
                                                     </div>
                                                 )}
                                                 {donor.height_cm && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Height</label>
-                                                        <p className="text-gray-900">{donor.height_cm} cm</p>
+                                                        <Label className="mb-1">Height</Label>
+                                                        <p className="text-foreground">{donor.height_cm} cm</p>
                                                     </div>
                                                 )}
                                                 {donor.weight_kg && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
-                                                        <p className="text-gray-900">{donor.weight_kg} kg</p>
+                                                        <Label className="mb-1">Weight</Label>
+                                                        <p className="text-foreground">{donor.weight_kg} kg</p>
                                                     </div>
                                                 )}
                                                 {donor.blood_group && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-                                                        <p className="text-gray-900">{donor.blood_group}</p>
+                                                        <Label className="mb-1">Blood Group</Label>
+                                                        <p className="text-foreground">{donor.blood_group}</p>
                                                     </div>
                                                 )}
                                                 {donor.hair_color && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Hair Color</label>
-                                                        <p className="text-gray-900">{donor.hair_color}</p>
+                                                        <Label className="mb-1">Hair Color</Label>
+                                                        <p className="text-foreground">{donor.hair_color}</p>
                                                     </div>
                                                 )}
                                                 {donor.eye_color && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Eye Color</label>
-                                                        <p className="text-gray-900">{donor.eye_color}</p>
+                                                        <Label className="mb-1">Eye Color</Label>
+                                                        <p className="text-foreground">{donor.eye_color}</p>
                                                     </div>
                                                 )}
                                                 {donor.skin_color && (
                                                     <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Skin Tone</label>
-                                                        <p className="text-gray-900">{donor.skin_color}</p>
+                                                        <Label className="mb-1">Skin Tone</Label>
+                                                        <p className="text-foreground">{donor.skin_color}</p>
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
+                                        </>
                                     )}
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
                             {/* Legal Documents */}
-                            <div className="table-card">
-                                <div className="p-6">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Legal Documents</h2>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <h2 className="text-xl font-semibold text-foreground mb-4">Legal Documents</h2>
 
                                     {!legalDocuments || legalDocuments.length === 0 ? (
-                                        <p className="text-gray-500 italic">No documents uploaded.</p>
+                                        <p className="text-muted-foreground italic">No documents uploaded.</p>
                                     ) : (
                                         <div className="space-y-3">
                                             {legalDocuments.map((doc) => (
-                                                <div key={doc.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                                <div key={doc.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
                                                     <div className="flex-1">
-                                                        <p className="font-medium text-gray-900">{documentTypeLabel(doc.type)}</p>
-                                                        <p className="text-sm text-gray-600">{doc.file_name}</p>
+                                                        <p className="font-medium text-foreground">{documentTypeLabel(doc.type)}</p>
+                                                        <p className="text-sm text-muted-foreground">{doc.file_name}</p>
                                                         {doc.uploaded_at && (
-                                                            <p className="text-sm text-gray-600">
+                                                            <p className="text-sm text-muted-foreground">
                                                                 Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}
                                                             </p>
                                                         )}
                                                         {doc.verified_by && (
-                                                            <p className="text-sm text-gray-600">
+                                                            <p className="text-sm text-muted-foreground">
                                                                 Verified by: {doc.verified_by} on {doc.verified_at ? new Date(doc.verified_at).toLocaleDateString() : ''}
                                                             </p>
                                                         )}
@@ -683,78 +687,82 @@ export default function DonorDetailPage() {
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <StatusBadge status={doc.status ?? 'pending'} />
-                                                        <button
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="sm"
                                                             onClick={() => viewDocument(doc.file_url)}
-                                                            className="btn-secondary"
                                                         >
-                                                            View
-                                                        </button>
+                                                            <Eye className="w-4 h-4 mr-1" /> View
+                                                        </Button>
                                                         {doc.status !== 'verified' && doc.status !== 'rejected' && (
                                                             <>
-                                                                <button
+                                                                <Button
+                                                                    size="sm"
                                                                     onClick={() => handleVerifyDocument(doc.file_url)}
-                                                                    className="btn-primary"
                                                                 >
                                                                     Verify
-                                                                </button>
-                                                                <button
+                                                                </Button>
+                                                                <Button
+                                                                    variant="destructive"
+                                                                    size="sm"
                                                                     onClick={() => handleRejectDocument(doc.file_url)}
-                                                                    className="btn-danger"
                                                                 >
                                                                     Reject
-                                                                </button>
+                                                                </Button>
                                                             </>
                                                         )}
-                                                        <button
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="sm"
                                                             onClick={() => handleRequestReupload(doc)}
-                                                            className="btn-secondary"
                                                         >
                                                             Request Re-upload
-                                                        </button>
-                                                        <button
+                                                        </Button>
+                                                        <Button
+                                                            variant="destructive"
+                                                            size="sm"
                                                             onClick={() => handleDeleteDocument(doc)}
-                                                            className="btn-danger"
                                                         >
-                                                            Delete
-                                                        </button>
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
 
 
                             {/* Consent Forms */}
                             {donor.consents && donor.consents.length > 0 && (
-                                <div className="table-card">
-                                    <div className="p-6">
+                                <Card>
+                                    <CardContent className="pt-6">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-xl font-semibold text-gray-900">Consent Forms</h2>
+                                            <h2 className="text-xl font-semibold text-foreground">Consent Forms</h2>
                                             {donor.consent_pending && (
                                                 <div className="flex gap-2">
-                                                    <button onClick={handleApproveConsent} className="btn-primary">
+                                                    <Button onClick={handleApproveConsent}>
                                                         Approve All
-                                                    </button>
-                                                    <button onClick={handleRejectConsent} className="btn-danger">
+                                                    </Button>
+                                                    <Button variant="destructive" onClick={handleRejectConsent}>
                                                         Reject All
-                                                    </button>
+                                                    </Button>
                                                 </div>
                                             )}
                                         </div>
                                         <div className="space-y-3">
                                             {donor.consents.map((consent) => (
-                                                <div key={consent.id} className="p-4 bg-gray-50 rounded-lg">
+                                                <div key={consent.id} className="p-4 bg-muted rounded-lg">
                                                     <div className="flex justify-between items-start">
                                                         <div>
-                                                            <p className="font-medium text-gray-900">{consent.template_title}</p>
-                                                            <p className="text-sm text-gray-600">
+                                                            <p className="font-medium text-foreground">{consent.template_title}</p>
+                                                            <p className="text-sm text-muted-foreground">
                                                                 Signed: {new Date(consent.signed_at).toLocaleDateString()}
                                                             </p>
                                                             {consent.verified_by && (
-                                                                <p className="text-sm text-gray-600">
+                                                                <p className="text-sm text-muted-foreground">
                                                                     Verified by: {consent.verified_by}
                                                                 </p>
                                                             )}
@@ -764,22 +772,23 @@ export default function DonorDetailPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             )}
 
-                            {/* Test Reports - REMOVED PER USER REQUEST */}\n {/* ADMIN SHOULD NOT SEE TEST RESULTS */}
+                            {/* Test Reports - REMOVED PER USER REQUEST */}
+                            {/* ADMIN SHOULD NOT SEE TEST RESULTS */}
 
                             {/* Counseling Sessions */}
                             {donor.counseling_sessions && donor.counseling_sessions.length > 0 && (
-                                <div className="table-card">
-                                    <div className="p-6">
+                                <Card>
+                                    <CardContent className="pt-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <div className="flex items-center gap-3">
-                                                <h2 className="text-xl font-semibold text-gray-900">Counseling Sessions</h2>
-                                                <span className="text-xs bg-indigo-500 text-white px-3 py-1 rounded-full font-medium">
+                                                <h2 className="text-xl font-semibold text-foreground">Counseling Sessions</h2>
+                                                <Badge className="bg-indigo-500 text-white hover:bg-indigo-500 rounded-full">
                                                     {donor.counseling_sessions.length} session{donor.counseling_sessions.length !== 1 ? 's' : ''}
-                                                </span>
+                                                </Badge>
                                             </div>
                                         </div>
                                         <div className="space-y-2">
@@ -787,15 +796,15 @@ export default function DonorDetailPage() {
                                                 <div key={session.id} className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg border border-indigo-200 hover:bg-indigo-100 transition-colors">
                                                     <div className="flex-1">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-indigo-600">💬</span>
-                                                            <p className="font-medium text-gray-900 text-sm">
+                                                            <span className="text-indigo-600">{'💬'}</span>
+                                                            <p className="font-medium text-foreground text-sm">
                                                                 {session.method === 'video' ? 'Video Call' : session.method === 'in_person' ? 'In-Person' : session.method || 'Counseling Session'}
                                                             </p>
                                                             <StatusBadge status={session.status} />
                                                         </div>
                                                         <div className="ml-6 mt-1 space-y-0.5">
                                                             {session.scheduled_at && (
-                                                                <p className="text-xs text-gray-600">
+                                                                <p className="text-xs text-muted-foreground">
                                                                     Scheduled: {new Date(session.scheduled_at).toLocaleDateString('en-US', {
                                                                         year: 'numeric',
                                                                         month: 'short',
@@ -806,85 +815,86 @@ export default function DonorDetailPage() {
                                                                 </p>
                                                             )}
                                                             {session.completed_at && (
-                                                                <p className="text-xs text-gray-600">
+                                                                <p className="text-xs text-muted-foreground">
                                                                     Completed: {new Date(session.completed_at).toLocaleDateString()}
                                                                 </p>
                                                             )}
                                                             {session.notes && (
-                                                                <p className="text-xs text-gray-600">Notes: {session.notes}</p>
+                                                                <p className="text-xs text-muted-foreground">Notes: {session.notes}</p>
                                                             )}
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-2">
                                                         {session.report_url && (
-                                                            <button
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
                                                                 onClick={() => viewDocument(session.report_url!)}
-                                                                className="btn-secondary text-sm px-3 py-1"
                                                             >
-                                                                View Report
-                                                            </button>
+                                                                <FileText className="w-4 h-4 mr-1" /> View Report
+                                                            </Button>
                                                         )}
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
                             )}
                         </div>
 
                         {/* Right Column - Status & History */}
                         <div className="space-y-6">
                             {/* Status Summary */}
-                            <div className="table-card">
-                                <div className="p-6">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Summary</h2>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <h2 className="text-xl font-semibold text-foreground mb-4">Status Summary</h2>
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">Consent Status</span>
+                                            <span className="text-foreground">Consent Status</span>
                                             <StatusBadge status={donor.consent_pending ? 'pending' : 'verified'} />
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">Counseling Status</span>
+                                            <span className="text-foreground">Counseling Status</span>
                                             <StatusBadge status={donor.counseling_pending ? 'pending' : 'completed'} />
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-700">Tests Status</span>
+                                            <span className="text-foreground">Tests Status</span>
                                             <StatusBadge status={donor.tests_pending ? 'pending' : 'verified'} />
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
 
                             {/* State History */}
-                            <div className="table-card">
-                                <div className="p-6">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">State History</h2>
+                            <Card>
+                                <CardContent className="pt-6">
+                                    <h2 className="text-xl font-semibold text-foreground mb-4">State History</h2>
                                     <div className="space-y-3 max-h-96 overflow-y-auto">
                                         {donor.state_history.map((history) => (
-                                            <div key={history.id} className="border-l-4 border-blue-500 pl-4 py-2">
-                                                <p className="font-medium text-gray-900">
+                                            <div key={history.id} className="border-l-4 border-secondary pl-4 py-2">
+                                                <p className="font-medium text-foreground">
                                                     {history.from_state ? `${history.from_state} → ` : ''}
                                                     {history.to_state}
                                                 </p>
-                                                <p className="text-sm text-gray-600">
+                                                <p className="text-sm text-muted-foreground">
                                                     {new Date(history.created_at).toLocaleString()}
                                                 </p>
                                                 {history.changed_by && (
-                                                    <p className="text-sm text-gray-600">
+                                                    <p className="text-sm text-muted-foreground">
                                                         By: {history.changed_by} ({history.changed_by_role})
                                                     </p>
                                                 )}
                                                 {history.reason && (
-                                                    <p className="text-sm text-gray-600 italic">
+                                                    <p className="text-sm text-muted-foreground italic">
                                                         Reason: {history.reason}
                                                     </p>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
-                                </div>
-                            </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     </div>
                 </div>
@@ -911,15 +921,15 @@ export default function DonorDetailPage() {
                     />
                 </div>
             )}
-        </DashboardLayout >
+        </DashboardLayout>
     );
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex justify-between text-sm">
-            <span className="text-gray-600">{label}</span>
-            <span className="text-gray-900 font-medium">{value}</span>
+            <span className="text-muted-foreground">{label}</span>
+            <span className="text-foreground font-medium">{value}</span>
         </div>
     );
 }
