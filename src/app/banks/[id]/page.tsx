@@ -366,12 +366,17 @@ export default function BankDetailPage() {
                                                             value={bank.state}
                                                             className="flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                                         >
-                                                            <option value="account_created">Account Created</option>
-                                                            <option value="verification_pending">Verification Pending</option>
-                                                            <option value="verified">Verified</option>
-                                                            <option value="subscription_pending">Subscription Pending</option>
-                                                            <option value="subscribed_onboarded">Subscribed & Onboarded</option>
-                                                            <option value="operational">Operational</option>
+                                                            <optgroup label="Onboarding (auto-transition)">
+                                                                <option value="account_created">Account Created</option>
+                                                                <option value="verification_pending">Verification Pending</option>
+                                                                <option value="verified">Verified</option>
+                                                                <option value="subscription_pending">Subscription Pending</option>
+                                                            </optgroup>
+                                                            <optgroup label="Admin-managed">
+                                                                <option value="operational">Operational</option>
+                                                                <option value="conflicted">Conflicted (payment/issue pending)</option>
+                                                                <option value="offboarded">Offboarded</option>
+                                                            </optgroup>
                                                         </select>
                                                     </div>
                                                 ) : (

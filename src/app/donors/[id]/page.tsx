@@ -129,6 +129,7 @@ interface DonorDetail {
     eye_color: string | null;
     blood_group: string | null;
     medical_interest_info: Record<string, any> | null;
+    aadhaar_number: string | null;
     eligibility_notes: string | null;
     selected_at: string | null;
     consent_pending: boolean;
@@ -654,6 +655,72 @@ export default function DonorDetailPage() {
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Aadhaar Verification */}
+                            {donor.aadhaar_number && (
+                                <Card>
+                                    <CardContent className="pt-6">
+                                        <h2 className="text-xl font-semibold text-foreground mb-4">Aadhaar Verification</h2>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div>
+                                                <p className="text-sm text-muted-foreground mb-1">Aadhaar Number</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-2xl font-mono tracking-widest text-foreground">
+                                                        {donor.aadhaar_number.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3')}
+                                                    </p>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(donor.aadhaar_number!);
+                                                            toast.success('Aadhaar number copied');
+                                                        }}
+                                                    >
+                                                        Copy
+                                                    </Button>
+                                                </div>
+                                                {donor.profile_picture_url && (
+                                                    <div className="mt-4">
+                                                        <p className="text-sm text-muted-foreground mb-2">Profile Photo</p>
+                                                        <div className="w-32 h-32 rounded-lg border border-border overflow-hidden bg-muted">
+                                                            <img src={donor.profile_picture_url} alt="Donor profile" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-muted-foreground mb-2">Government ID Document</p>
+                                                {(() => {
+                                                    const govDoc = legalDocuments?.find(d => d.type === 'government_id');
+                                                    if (!govDoc) return <p className="text-muted-foreground italic">No government ID uploaded</p>;
+                                                    return (
+                                                        <div className="space-y-2">
+                                                            <div className="border border-border rounded-lg p-3 bg-muted">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div>
+                                                                        <p className="font-medium text-foreground">{govDoc.file_name}</p>
+                                                                        <StatusBadge status={govDoc.status ?? 'pending'} />
+                                                                    </div>
+                                                                    <Button
+                                                                        variant="secondary"
+                                                                        size="sm"
+                                                                        onClick={() => viewDocument(govDoc.file_url)}
+                                                                    >
+                                                                        <Eye className="w-4 h-4 mr-1" /> View
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground">
+                                                                Cross-reference the Aadhaar number with the uploaded government ID
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
 
                             {/* Legal Documents */}
                             <Card>

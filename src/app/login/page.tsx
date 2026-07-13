@@ -113,6 +113,7 @@ export default function LoginPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                     >
                                         {showPassword ? (
@@ -127,7 +128,7 @@ export default function LoginPage() {
                             {/* Forgot password */}
                             <div className="text-right">
                                 <a
-                                    href="#"
+                                    href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://veriart.in'}/forgot-password?type=admin`}
                                     className="text-sm text-secondary hover:underline"
                                 >
                                     Forgot password?
@@ -140,7 +141,7 @@ export default function LoginPage() {
                                 disabled={loading}
                                 className="mt-2 w-full py-3"
                             >
-                                {loading ? 'Signing in...' : 'Get Started'}
+                                {loading ? 'Signing in...' : 'Sign In'}
                             </Button>
                         </form>
                     </CardContent>

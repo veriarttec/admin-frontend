@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Building2, Users, CreditCard, RefreshCw, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, CreditCard, RefreshCw, LogOut, ShieldCheck, Menu, X } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface DashboardLayoutProps {
@@ -25,6 +25,7 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
     const router = useRouter();
     const [adminName, setAdminName] = useState('');
     const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         if (!localStorage.getItem('admin_token')) {
@@ -53,11 +54,21 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
 
     return (
         <div className="flex min-h-screen">
+            {/* Mobile Overlay */}
+            {isMobileMenuOpen && (
+                <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-60 bg-secondary fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10">
-                <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
-                    <ShieldCheck className="w-7 h-7 text-white" />
-                    <span className="text-lg font-semibold text-white">VeriART Admin</span>
+            <aside className={`w-60 bg-secondary fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+                <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <ShieldCheck className="w-7 h-7 text-white" />
+                        <span className="text-lg font-semibold text-white">VeriART Admin</span>
+                    </div>
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-1 text-white/70 hover:text-white">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
                 <nav className="flex-1 py-4">
@@ -67,6 +78,7 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
                             <Link
                                 key={item.path}
                                 href={item.path}
+                                onClick={() => setIsMobileMenuOpen(false)}
                                 className={`flex items-center gap-3 px-6 py-2.5 text-sm font-medium transition-colors border-l-[3px] ${
                                     isActive
                                         ? 'border-primary bg-white/10 text-primary'
@@ -101,10 +113,15 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
             </aside>
 
             {/* Main Content */}
-            <div className="ml-60 flex-1 min-h-screen bg-background">
+            <div className="lg:ml-60 flex-1 min-h-screen bg-background">
                 {title && (
-                    <div className="sticky top-0 z-40 bg-card border-b border-border px-8 py-4 flex justify-between items-center">
-                        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+                    <div className="sticky top-0 z-40 bg-card border-b border-border px-4 lg:px-8 py-4 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-muted-foreground hover:bg-muted rounded-lg">
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+                        </div>
                         <div className="flex items-center gap-2">
                             {onRefresh && (
                                 <button
@@ -120,7 +137,14 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
                         </div>
                     </div>
                 )}
-                <div className="px-8 py-6 max-w-[1600px] mx-auto">
+                {!title && (
+                    <div className="lg:hidden sticky top-0 z-40 bg-card border-b border-border px-4 py-3">
+                        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-muted-foreground hover:bg-muted rounded-lg">
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    </div>
+                )}
+                <div className="px-4 lg:px-8 py-6 max-w-[1600px] mx-auto">
                     <Breadcrumbs />
                     {children}
                 </div>

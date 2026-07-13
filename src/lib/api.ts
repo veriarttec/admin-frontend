@@ -153,12 +153,13 @@ class AdminAPI {
     }
 
     // Donors
-    async getDonors(params?: { page?: number; state?: string; bank_id?: string; search?: string }) {
+    async getDonors(params?: { page?: number; state?: string; bank_id?: string; search?: string; aadhaar_search?: string }) {
         const queryParams = new URLSearchParams();
         if (params?.page) queryParams.set('page', params.page.toString());
         if (params?.state) queryParams.set('state', params.state);
         if (params?.bank_id) queryParams.set('bank_id', params.bank_id);
         if (params?.search) queryParams.set('search', params.search);
+        if (params?.aadhaar_search) queryParams.set('aadhaar_search', params.aadhaar_search);
 
         return this.request(`/api/admin/donors?${queryParams.toString()}`);
     }

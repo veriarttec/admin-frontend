@@ -26,6 +26,7 @@ interface Donor {
     bank_id: string | null;
     bank_name: string | null;
     eligibility_status: string;
+    aadhaar_number: string | null;
     created_at: string;
 }
 
@@ -46,6 +47,8 @@ const DONOR_STATES = [
 export default function DonorsPage() {
     const [search, setSearch] = useState('');
     const [submittedSearch, setSubmittedSearch] = useState('');
+    const [aadhaarSearch, setAadhaarSearch] = useState('');
+    const [submittedAadhaarSearch, setSubmittedAadhaarSearch] = useState('');
     const [stateFilter, setStateFilter] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newDonor, setNewDonor] = useState({
@@ -59,11 +62,12 @@ export default function DonorsPage() {
     const router = useRouter();
 
     const { data, isLoading, mutate } = useSWR<DonorListResponse>(
-        ['donors', stateFilter, submittedSearch],
+        ['donors', stateFilter, submittedSearch, submittedAadhaarSearch],
         () => {
             const params: any = {};
             if (stateFilter) params.state = stateFilter;
             if (submittedSearch) params.search = submittedSearch;
+            if (submittedAadhaarSearch) params.aadhaar_search = submittedAadhaarSearch;
             return api.getDonors(params);
         },
         {
@@ -80,6 +84,11 @@ export default function DonorsPage() {
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         setSubmittedSearch(search);
+    };
+
+    const handleAadhaarSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmittedAadhaarSearch(aadhaarSearch.replace(/\D/g, ''));
     };
 
     const handleCreateDonor = async () => {
@@ -135,6 +144,18 @@ export default function DonorsPage() {
                                 className="flex-1"
                             />
                             <Button type="submit">Search</Button>
+                        </form>
+
+                        <form onSubmit={handleAadhaarSearch} className="flex gap-2 min-w-[200px]">
+                            <Input
+                                type="text"
+                                value={aadhaarSearch}
+                                onChange={(e) => setAadhaarSearch(e.target.value)}
+                                placeholder="Search by Aadhaar..."
+                                className="w-48 font-mono"
+                                maxLength={14}
+                            />
+                            <Button type="submit" variant="outline" size="sm">Go</Button>
                         </form>
 
                         <select
