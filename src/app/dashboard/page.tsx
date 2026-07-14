@@ -48,30 +48,22 @@ interface DashboardData {
 }
 
 const PIPELINE_STAGES = [
-    { key: 'new', label: 'New', color: 'bg-blue-400' },
-    { key: 'verifying', label: 'Verifying', color: 'bg-amber-400' },
-    { key: 'verified', label: 'Verified', color: 'bg-cyan-400' },
-    { key: 'subscribing', label: 'Subscribing', color: 'bg-purple-400' },
+    { key: 'onboarding', label: 'Onboarding', color: 'bg-amber-400' },
     { key: 'operational', label: 'Operational', color: 'bg-green-500' },
+    { key: 'conflicted', label: 'Conflicted', color: 'bg-red-400' },
+    { key: 'offboarded', label: 'Offboarded', color: 'bg-gray-400' },
 ];
 
 function derivePipelineCounts(stats: DashboardStats) {
     const operational = stats.operational_banks || 0;
-    const subscribed = stats.subscribed_banks || 0;
-    const verified = stats.verified_banks || 0;
     const total = stats.total_banks || 0;
-
-    const subscribing = Math.max(0, subscribed - operational);
-    const verifiedOnly = Math.max(0, verified - subscribed);
-    const verifying = Math.max(0, total - verified - subscribing);
-    const newBanks = Math.max(0, total - operational - subscribing - verifiedOnly - verifying);
+    const onboarding = Math.max(0, total - operational);
 
     return [
-        { ...PIPELINE_STAGES[0], count: newBanks },
-        { ...PIPELINE_STAGES[1], count: verifying },
-        { ...PIPELINE_STAGES[2], count: verifiedOnly },
-        { ...PIPELINE_STAGES[3], count: subscribing },
-        { ...PIPELINE_STAGES[4], count: operational },
+        { ...PIPELINE_STAGES[0], count: onboarding },
+        { ...PIPELINE_STAGES[1], count: operational },
+        { ...PIPELINE_STAGES[2], count: 0 },
+        { ...PIPELINE_STAGES[3], count: 0 },
     ];
 }
 
@@ -186,14 +178,16 @@ export default function DashboardPage() {
                     )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        {/* Subscription Breakdown */}
-                        <Card>
+                        {/* Subscription Breakdown — Coming Soon */}
+                        <Card className="relative overflow-hidden">
+                            <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center">
+                                <CreditCard className="w-10 h-10 text-muted-foreground/40 mb-2" />
+                                <span className="text-sm font-semibold text-muted-foreground">Coming Soon</span>
+                                <span className="text-xs text-muted-foreground/70 mt-1">Subscription analytics</span>
+                            </div>
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <CardTitle>Subscription Tiers</CardTitle>
-                                    <Link href="/subscriptions" className="text-xs text-secondary hover:underline">
-                                        Manage →
-                                    </Link>
                                 </div>
                             </CardHeader>
                             <CardContent className="p-0">
@@ -206,20 +200,7 @@ export default function DashboardPage() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {data?.subscription_breakdown.map((tier) => (
-                                            <TableRow key={tier.tier}>
-                                                <TableCell className="font-medium text-foreground">{tier.tier}</TableCell>
-                                                <TableCell className="text-foreground">{tier.count} {tier.count === 1 ? 'bank' : 'banks'}</TableCell>
-                                                <TableCell className="text-right">
-                                                    <span className="text-green-600 font-semibold">${tier.revenue_estimate.toLocaleString()}</span>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {(!data?.subscription_breakdown || data.subscription_breakdown.length === 0) && (
-                                            <TableRow>
-                                                <TableCell colSpan={3} className="text-center text-muted-foreground">No active subscriptions</TableCell>
-                                            </TableRow>
-                                        )}
+                                        <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">—</TableCell></TableRow>
                                     </TableBody>
                                 </Table>
                             </CardContent>

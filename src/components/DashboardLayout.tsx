@@ -17,7 +17,7 @@ const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Banks', path: '/banks', icon: Building2 },
     { name: 'Donors', path: '/donors', icon: Users },
-    { name: 'Subscriptions', path: '/subscriptions', icon: CreditCard },
+    { name: 'Subscriptions', path: '/subscriptions', icon: CreditCard, comingSoon: true },
 ];
 
 export default function DashboardLayout({ children, title, actions, onRefresh }: DashboardLayoutProps) {
@@ -60,13 +60,13 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
             )}
 
             {/* Sidebar */}
-            <aside className={`w-60 bg-secondary fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-                <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+            <aside className={`w-60 bg-card fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+                <div className="px-6 py-5 border-b border-border flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <ShieldCheck className="w-7 h-7 text-white" />
-                        <span className="text-lg font-semibold text-white">VeriART Admin</span>
+                        <ShieldCheck className="w-7 h-7 text-secondary" />
+                        <span className="text-lg font-semibold text-foreground">VeriART Admin</span>
                     </div>
-                    <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-1 text-white/70 hover:text-white">
+                    <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden p-1 text-muted-foreground hover:text-foreground">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -77,34 +77,39 @@ export default function DashboardLayout({ children, title, actions, onRefresh }:
                         return (
                             <Link
                                 key={item.path}
-                                href={item.path}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 px-6 py-2.5 text-sm font-medium transition-colors border-l-[3px] ${
-                                    isActive
-                                        ? 'border-primary bg-white/10 text-primary'
-                                        : 'border-transparent text-tertiary hover:bg-white/5 hover:text-white'
+                                href={item.comingSoon ? '#' : item.path}
+                                onClick={(e) => { if (item.comingSoon) e.preventDefault(); else setIsMobileMenuOpen(false); }}
+                                className={`flex items-center gap-3 px-6 py-2.5 text-sm font-medium transition-colors ${
+                                    item.comingSoon
+                                        ? 'opacity-50 cursor-default text-muted-foreground'
+                                        : isActive
+                                            ? 'bg-muted text-foreground'
+                                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                                 }`}
                             >
-                                <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+                                <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive && !item.comingSoon ? 'text-secondary' : ''}`} />
                                 <span>{item.name}</span>
+                                {item.comingSoon && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted-foreground/15 text-muted-foreground leading-none ml-auto">Soon</span>
+                                )}
                             </Link>
                         );
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
+                <div className="p-4 border-t border-border">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-9 h-9 rounded-full bg-secondary-dark flex items-center justify-center text-white text-sm font-semibold">
+                        <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-foreground text-sm font-semibold">
                             {adminName ? adminName.charAt(0).toUpperCase() : 'A'}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-white truncate">{adminName || 'Admin'}</div>
-                            <div className="text-xs text-tertiary">Administrator</div>
+                            <div className="text-sm font-medium text-foreground truncate">{adminName || 'Admin'}</div>
+                            <div className="text-xs text-muted-foreground">Administrator</div>
                         </div>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-white/10 text-white text-sm font-medium hover:bg-white/20 transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors"
                     >
                         <LogOut className="w-4 h-4" />
                         Logout

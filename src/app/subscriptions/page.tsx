@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { CreditCard } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
@@ -222,9 +223,13 @@ export default function SubscriptionsPage() {
 
     return (
         <DashboardLayout title="Subscriptions">
-            {loading ? (
-                <div className="text-muted-foreground">Loading...</div>
-            ) : (
+            <div className="relative">
+                <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-lg">
+                    <CreditCard className="w-12 h-12 text-muted-foreground/40 mb-3" />
+                    <span className="text-lg font-semibold text-foreground">Coming Soon</span>
+                    <span className="text-sm text-muted-foreground mt-1">Subscription management is under development</span>
+                </div>
+                <div className="pointer-events-none opacity-40">
                 <div className="dashboard-container">
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
                         <TabsList>
@@ -571,7 +576,8 @@ export default function SubscriptionsPage() {
                         </TabsContent>
                     </Tabs>
                 </div>
-            )}
+                </div>
+            </div>
         </DashboardLayout>
     );
 }
