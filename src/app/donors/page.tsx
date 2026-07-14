@@ -39,9 +39,13 @@ interface DonorListResponse {
 }
 
 const DONOR_STATES = [
-    'visitor', 'bank_selected', 'lead_created', 'account_created',
-    'counseling_requested', 'consent_pending', 'consent_verified',
-    'tests_pending', 'eligibility_decision', 'donor_onboarded'
+    'lead created', 'account created',
+    'medical information submitted',
+    'legal document verification pending', 'legal document verification verified', 'legal document verification rejected',
+    'consent forms uploaded', 'consent forms verified', 'consent forms rejected',
+    'counseling requested', 'counseling verified', 'counseling rejected',
+    'test reports scheduling requested', 'test reports uploaded', 'test reports verified', 'test reports rejected',
+    'pending bank approval', 'donor onboarded', 'donor rejected'
 ];
 
 export default function DonorsPage() {
@@ -167,7 +171,7 @@ export default function DonorsPage() {
                             <option value="">All States</option>
                             {DONOR_STATES.map((state) => (
                                 <option key={state} value={state}>
-                                    {state.replace(/_/g, ' ')}
+                                    {state.charAt(0).toUpperCase() + state.slice(1)}
                                 </option>
                             ))}
                         </select>
