@@ -236,6 +236,35 @@ class AdminAPI {
         });
     }
 
+    // System Settings (maintenance mode)
+    async getSystemSettings() {
+        return this.request('/api/admin/system-settings');
+    }
+
+    async setMaintenanceMode(enabled: boolean, message?: string) {
+        return this.request('/api/admin/system-settings/maintenance', {
+            method: 'PUT',
+            body: JSON.stringify({ enabled, message }),
+        });
+    }
+
+    // Error Logs
+    async getErrorLogs(params?: { page?: number; source?: string; resolved?: boolean }) {
+        const q = new URLSearchParams();
+        if (params?.page) q.set('page', params.page.toString());
+        if (params?.source) q.set('source', params.source);
+        if (params?.resolved !== undefined) q.set('resolved', params.resolved.toString());
+        return this.request(`/api/admin/error-logs?${q.toString()}`);
+    }
+
+    async getErrorLogDetail(id: string) {
+        return this.request(`/api/admin/error-logs/${id}`);
+    }
+
+    async resolveErrorLog(id: string) {
+        return this.request(`/api/admin/error-logs/${id}/resolve`, { method: 'PUT' });
+    }
+
     async changeBankState(bankId: string, toState: string, reason?: string) {
         return this.request(`/api/admin/banks/${bankId}/state`, {
             method: 'PUT',

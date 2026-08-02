@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LayoutDashboard, Building2, Users, CreditCard, RefreshCw, LogOut, ShieldCheck, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, CreditCard, RefreshCw, LogOut, ShieldCheck, Menu, X, AlertTriangle, Settings } from 'lucide-react';
 import Breadcrumbs from '@/components/Breadcrumbs';
 
 interface DashboardLayoutProps {
@@ -18,6 +18,8 @@ const navItems = [
     { name: 'Banks', path: '/banks', icon: Building2 },
     { name: 'Donors', path: '/donors', icon: Users },
     { name: 'Subscriptions', path: '/subscriptions', icon: CreditCard, comingSoon: true },
+    { name: 'Error Logs', path: '/error-logs', icon: AlertTriangle },
+    { name: 'Settings', path: '/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children, title, actions, onRefresh }: DashboardLayoutProps) {
