@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +19,14 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const msg = sessionStorage.getItem('admin_session_message');
+        if (msg) {
+            sessionStorage.removeItem('admin_session_message');
+            setError(msg);
+        }
+    }, []);
 
     // Values come from env so production bundles never contain credentials
     const fillDevCredentials = () => {
@@ -128,7 +136,7 @@ export default function LoginPage() {
                             {/* Forgot password */}
                             <div className="text-right">
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://veriart.in'}/forgot-password?type=admin`}
+                                    href={`${process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://veriart-tec.in'}/forgot-password?type=admin`}
                                     className="text-sm text-secondary hover:underline"
                                 >
                                     Forgot password?

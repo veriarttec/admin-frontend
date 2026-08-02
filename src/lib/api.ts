@@ -65,17 +65,34 @@ class AdminAPI {
             headers,
         });
 
+        const body = await response.json().catch(() => ({ detail: 'Request failed' }));
+
+        if (response.status === 401 && typeof window !== 'undefined') {
+            // A 401 while already on /login is a failed login attempt (wrong
+            // password), not an expired session — let the login page's own
+            // inline error handling show it instead of hard-redirecting.
+            const onLoginPage = window.location.pathname.startsWith('/login');
+            if (!onLoginPage) {
+                this.clearToken();
+                localStorage.removeItem('admin_name');
+                localStorage.removeItem('admin_role');
+                if (body?.detail?.code === 'TOKEN_EXPIRED') {
+                    sessionStorage.setItem('admin_session_message', 'Your session has expired. Please sign in again.');
+                }
+                window.location.href = '/login';
+            }
+        }
+
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-            const errorMessage = typeof error.detail === 'string'
-                ? error.detail
-                : typeof error.detail === 'object'
-                    ? JSON.stringify(error.detail)
+            const errorMessage = typeof body.detail === 'string'
+                ? body.detail
+                : typeof body.detail === 'object'
+                    ? JSON.stringify(body.detail)
                     : 'Request failed';
             throw new Error(errorMessage);
         }
 
-        return response.json();
+        return body;
     }
 
     // Authentication
